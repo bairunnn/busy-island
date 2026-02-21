@@ -211,7 +211,7 @@ function renderQuestion() {
   answered = false;
   const [left, right] = questions[currentQ];
 
-  document.getElementById('question-label').textContent = `Question ${currentQ + 1} of 10`;
+  // document.getElementById('question-label').textContent = `Question ${currentQ + 1} of 10`;
 
   document.getElementById('band-left').style.background  = buildBandGradient(left);
   document.getElementById('band-right').style.background = buildBandGradient(right);
