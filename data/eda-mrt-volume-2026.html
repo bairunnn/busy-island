@@ -497,10 +497,24 @@ str(volume_raw)</code></pre>
 ##  $ TOTAL_TAP_OUT_VOLUME: int  3179 21763 694 14978 3743 103289 2034 1309 27688 1258 ...</code></pre>
 <pre class="r"><code>volume_raw &lt;- volume_raw %&gt;%
   select(-YEAR_MONTH, -PT_TYPE) %&gt;%
-  mutate(TIME_PER_HOUR = as.character(TIME_PER_HOUR))</code></pre>
+  mutate(TIME_PER_HOUR = as.character(TIME_PER_HOUR))
+
+# Important - divide by # of weekdays &amp; weekends!
+
+volume_raw &lt;- volume_raw %&gt;%
+  mutate(across(
+    c(TOTAL_TAP_IN_VOLUME, TOTAL_TAP_OUT_VOLUME),
+    ~ if_else(DAY_TYPE == &quot;WEEKDAY&quot;, . / 21, . / 10)
+  ))</code></pre>
+<div id="reformat-certain-variables" class="section level3">
+<h3>Reformat certain variables</h3>
+<pre class="r"><code>volume_raw &lt;- volume_raw %&gt;%
+  mutate(TIME_PER_HOUR = str_pad(TIME_PER_HOUR, width = 2, side = &quot;left&quot;, pad = &quot;0&quot;))</code></pre>
+</div>
 <div id="verify-if-data-is-proper" class="section level3">
 <h3>Verify if data is proper</h3>
-<p>Verify # of observations per station</p>
+<div id="verify-of-observations-per-station" class="section level4">
+<h4>Verify # of observations per station</h4>
 <pre class="r"><code>pt_code_counts &lt;- volume_raw %&gt;%
   count(PT_CODE) %&gt;%
   arrange(n)
@@ -510,6 +524,23 @@ print(all_same)</code></pre>
 <pre><code>## [1] FALSE</code></pre>
 <pre class="r"><code># If false, some stations have fewer counts than the rest</code></pre>
 <pre class="r"><code># print(pt_code_counts)</code></pre>
+</div>
+<div id="fix-duplicate-stations-like-stevens" class="section level4">
+<h4>Fix duplicate stations like Stevens</h4>
+<pre class="r"><code>dt10_te11 &lt;- volume_raw %&gt;%
+  filter(PT_CODE %in% c(&quot;DT10&quot;, &quot;TE11&quot;)) %&gt;%
+  group_by(DAY_TYPE, TIME_PER_HOUR) %&gt;%
+  summarise(
+    PT_CODE              = &quot;DT10/TE11&quot;,
+    TOTAL_TAP_IN_VOLUME  = sum(TOTAL_TAP_IN_VOLUME, na.rm = TRUE),
+    TOTAL_TAP_OUT_VOLUME = sum(TOTAL_TAP_OUT_VOLUME, na.rm = TRUE),
+    .groups = &quot;drop&quot;
+  )
+
+volume_raw &lt;- volume_raw %&gt;%
+  filter(!PT_CODE %in% c(&quot;DT10&quot;, &quot;TE11&quot;)) %&gt;%
+  bind_rows(dt10_te11)</code></pre>
+</div>
 </div>
 <div id="join-station-names" class="section level3">
 <h3>Join station names</h3>
@@ -539,8 +570,121 @@ get_station_name &lt;- function(code) {
 volume_processed &lt;- volume_processed %&gt;%
   mutate(stn_name = map_chr(PT_CODE_1, get_station_name))</code></pre>
 </div>
-<div id="add-lines" class="section level3">
-<h3>Add lines</h3>
+<div id="mutate-lines" class="section level3">
+<h3>Mutate lines</h3>
+<p>c(EWL, NSL, NEL, CCL, DTL, PGLRT, SKLRT, BPLRT, TEL)</p>
+<pre class="r"><code>volume_processed &lt;- volume_processed %&gt;%
+  mutate(
+    EWL   = if_else(if_any(c(PT_CODE_1, PT_CODE_2, PT_CODE_3), ~ str_detect(.x, &quot;EW|CG&quot;)), 1, 0),
+    NSL   = if_else(if_any(c(PT_CODE_1, PT_CODE_2, PT_CODE_3), ~ str_detect(.x, &quot;NS&quot;)), 1, 0),
+    NEL   = if_else(if_any(c(PT_CODE_1, PT_CODE_2, PT_CODE_3), ~ str_detect(.x, &quot;NE&quot;)), 1, 0),
+    CCL   = if_else(if_any(c(PT_CODE_1, PT_CODE_2, PT_CODE_3), ~ str_detect(.x, &quot;CC|CE&quot;)), 1, 0),
+    DTL   = if_else(if_any(c(PT_CODE_1, PT_CODE_2, PT_CODE_3), ~ str_detect(.x, &quot;DT&quot;)), 1, 0),
+    PGLRT = if_else(if_any(c(PT_CODE_1, PT_CODE_2, PT_CODE_3), ~ str_detect(.x, &quot;PW|PE&quot;)), 1, 0),
+    SKLRT = if_else(if_any(c(PT_CODE_1, PT_CODE_2, PT_CODE_3), ~ str_detect(.x, &quot;SW|SE&quot;)), 1, 0),
+    BPLRT = if_else(if_any(c(PT_CODE_1, PT_CODE_2, PT_CODE_3), ~ str_detect(.x, &quot;BP&quot;)), 1, 0),
+    TEL   = if_else(if_any(c(PT_CODE_1, PT_CODE_2, PT_CODE_3), ~ str_detect(.x, &quot;TE&quot;)), 1, 0)
+  ) %&gt;%
+  mutate(
+    across(
+      c(EWL, NSL, NEL, CCL, DTL, PGLRT, SKLRT, BPLRT, TEL),
+      ~ replace_na(.x, 0)
+    )
+  )</code></pre>
+</div>
+<div id="check-number-of-stations-overall-per-line" class="section level3">
+<h3>Check number of stations (overall &amp; per line)</h3>
+<pre class="r"><code>n_distinct(volume_processed$stn_name)</code></pre>
+<pre><code>## [1] 181</code></pre>
+<pre class="r"><code>summary_stn_counts &lt;- volume_processed %&gt;%
+  summarise(
+    across(
+      c(EWL, NSL, NEL, CCL, DTL, PGLRT, SKLRT, BPLRT, TEL),
+      ~ n_distinct(stn_name[.x == 1])
+    )
+  )
+
+summary_stn_counts</code></pre>
+<pre><code>##   EWL NSL NEL CCL DTL PGLRT SKLRT BPLRT TEL
+## 1  35  27  17  30  35    14    13    13  27</code></pre>
+</div>
+<div id="weekday-volumes" class="section level3">
+<h3>Weekday volumes</h3>
+<pre class="r"><code>volume_weekdays &lt;- volume_processed %&gt;%
+  filter(DAY_TYPE == &quot;WEEKDAY&quot;) %&gt;%
+  select(-DAY_TYPE)
+
+summary_weekdays &lt;- volume_weekdays %&gt;%
+  group_by(stn_name, EWL, NSL, NEL, CCL, DTL, PGLRT, SKLRT, BPLRT, TEL) %&gt;%
+  summarise(
+    total_in  = sum(TOTAL_TAP_IN_VOLUME, na.rm = TRUE),
+    total_out = sum(TOTAL_TAP_OUT_VOLUME, na.rm = TRUE),
+    total_sum = total_in + total_out,
+    .groups = &quot;drop&quot;
+  ) %&gt;%
+  mutate(across(c(total_in, total_out, total_sum), round))
+
+n_distinct(summary_weekdays$stn_name)</code></pre>
+<pre><code>## [1] 181</code></pre>
+<pre class="r"><code>write.csv(summary_weekdays, &quot;summary_weekdays.csv&quot;)</code></pre>
+<div id="am-peak---09-10" class="section level4">
+<h4>AM peak - 09 10</h4>
+<pre class="r"><code>volume_weekdays_am_peak &lt;- volume_weekdays %&gt;%
+  filter(TIME_PER_HOUR %in% c(&quot;08&quot;, &quot;09&quot;))
+
+summary_weekdays_am_peak &lt;- volume_weekdays_am_peak %&gt;%
+  group_by(stn_name, EWL, NSL, NEL, CCL, DTL, PGLRT, SKLRT, BPLRT, TEL) %&gt;%
+  summarise(
+    total_in  = sum(TOTAL_TAP_IN_VOLUME, na.rm = TRUE),
+    total_out = sum(TOTAL_TAP_OUT_VOLUME, na.rm = TRUE),
+    total_sum = total_in + total_out,
+    .groups = &quot;drop&quot;
+  ) %&gt;%
+  mutate(across(c(total_in, total_out, total_sum), round))
+
+n_distinct(summary_weekdays_am_peak$stn_name)</code></pre>
+<pre><code>## [1] 181</code></pre>
+<pre class="r"><code>write.csv(summary_weekdays_am_peak, &quot;summary_weekdays_am_peak.csv&quot;)</code></pre>
+</div>
+<div id="pm-peak---17-18-19" class="section level4">
+<h4>PM peak - 17 18 19</h4>
+<pre class="r"><code>volume_weekdays_pm_peak &lt;- volume_weekdays %&gt;%
+  filter(TIME_PER_HOUR %in% c(&quot;17&quot;, &quot;18&quot;, &quot;19&quot;))
+
+summary_weekdays_pm_peak &lt;- volume_weekdays_pm_peak %&gt;%
+  group_by(stn_name, EWL, NSL, NEL, CCL, DTL, PGLRT, SKLRT, BPLRT, TEL) %&gt;%
+  summarise(
+    total_in  = sum(TOTAL_TAP_IN_VOLUME, na.rm = TRUE),
+    total_out = sum(TOTAL_TAP_OUT_VOLUME, na.rm = TRUE),
+    total_sum = total_in + total_out,
+    .groups = &quot;drop&quot;
+  ) %&gt;%
+  mutate(across(c(total_in, total_out, total_sum), round))
+
+n_distinct(summary_weekdays_pm_peak$stn_name)</code></pre>
+<pre><code>## [1] 181</code></pre>
+<pre class="r"><code>write.csv(summary_weekdays_pm_peak, &quot;summary_weekdays_pm_peak.csv&quot;)</code></pre>
+</div>
+</div>
+<div id="weekend-volumes" class="section level3">
+<h3>Weekend volumes</h3>
+<pre class="r"><code>volume_weekends &lt;- volume_processed %&gt;%
+  filter(DAY_TYPE == &quot;WEEKENDS/HOLIDAY&quot;) %&gt;%
+  select(-DAY_TYPE)
+
+summary_weekends &lt;- volume_weekends %&gt;%
+  group_by(stn_name, EWL, NSL, NEL, CCL, DTL, PGLRT, SKLRT, BPLRT, TEL) %&gt;%
+  summarise(
+    total_in  = sum(TOTAL_TAP_IN_VOLUME, na.rm = TRUE),
+    total_out = sum(TOTAL_TAP_OUT_VOLUME, na.rm = TRUE),
+    total_sum = total_in + total_out,
+    .groups = &quot;drop&quot;
+  ) %&gt;%
+  mutate(across(c(total_in, total_out, total_sum), round))
+
+n_distinct(summary_weekends$stn_name)</code></pre>
+<pre><code>## [1] 181</code></pre>
+<pre class="r"><code>write.csv(summary_weekends, &quot;summary_weekends.csv&quot;)</code></pre>
 </div>
 </div>
 

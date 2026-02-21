@@ -137,6 +137,14 @@ str(volume_raw)
 volume_raw <- volume_raw %>%
   select(-YEAR_MONTH, -PT_TYPE) %>%
   mutate(TIME_PER_HOUR = as.character(TIME_PER_HOUR))
+
+# Important - divide by # of weekdays & weekends!
+
+volume_raw <- volume_raw %>%
+  mutate(across(
+    c(TOTAL_TAP_IN_VOLUME, TOTAL_TAP_OUT_VOLUME),
+    ~ if_else(DAY_TYPE == "WEEKDAY", . / 21, . / 10)
+  ))
 ```
 
 ### Reformat certain variables
@@ -276,7 +284,8 @@ summary_weekdays <- volume_weekdays %>%
     total_out = sum(TOTAL_TAP_OUT_VOLUME, na.rm = TRUE),
     total_sum = total_in + total_out,
     .groups = "drop"
-  )
+  ) %>%
+  mutate(across(c(total_in, total_out, total_sum), round))
 
 n_distinct(summary_weekdays$stn_name)
 
@@ -296,7 +305,9 @@ summary_weekdays_am_peak <- volume_weekdays_am_peak %>%
     total_out = sum(TOTAL_TAP_OUT_VOLUME, na.rm = TRUE),
     total_sum = total_in + total_out,
     .groups = "drop"
-  )
+  ) %>%
+  mutate(across(c(total_in, total_out, total_sum), round))
+
 n_distinct(summary_weekdays_am_peak$stn_name)
 write.csv(summary_weekdays_am_peak, "summary_weekdays_am_peak.csv")
 
@@ -315,7 +326,9 @@ summary_weekdays_pm_peak <- volume_weekdays_pm_peak %>%
     total_out = sum(TOTAL_TAP_OUT_VOLUME, na.rm = TRUE),
     total_sum = total_in + total_out,
     .groups = "drop"
-  )
+  ) %>%
+  mutate(across(c(total_in, total_out, total_sum), round))
+
 n_distinct(summary_weekdays_pm_peak$stn_name)
 write.csv(summary_weekdays_pm_peak, "summary_weekdays_pm_peak.csv")
 ```
@@ -334,7 +347,9 @@ summary_weekends <- volume_weekends %>%
     total_out = sum(TOTAL_TAP_OUT_VOLUME, na.rm = TRUE),
     total_sum = total_in + total_out,
     .groups = "drop"
-  )
+  ) %>%
+  mutate(across(c(total_in, total_out, total_sum), round))
+
 n_distinct(summary_weekends$stn_name)
 write.csv(summary_weekends, "summary_weekends.csv")
 ```
