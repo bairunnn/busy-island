@@ -300,3 +300,126 @@ function resetGame() {
   document.getElementById('score-correct').textContent   = '0';
   document.getElementById('score-wrong').textContent     = '0';
 }
+
+/* ══════════════════════════════════════
+   BROWSE BY STATION
+══════════════════════════════════════ */
+
+const LINE_LABELS = {
+  EWL: 'East-West Line', NSL: 'North-South Line', NEL: 'North East Line',
+  CCL: 'Circle Line', DTL: 'Downtown Line', TEL: 'Thomson-East Coast Line',
+  PGLRT: 'Punggol LRT', SKLRT: 'Sengkang LRT', BPLRT: 'Bukit Panjang LRT',
+};
+
+let browseDebounceTimer = null;
+
+function initBrowse() {
+  const browseToggle = document.getElementById('browse-day-toggle');
+  const searchInput  = document.getElementById('browse-search');
+  const suggestions  = document.getElementById('search-suggestions');
+
+  // Reset toggle to weekdays on each visit
+  browseToggle.checked = false;
+  updateBrowseToggleLabels(false);
+
+  // Remove old listeners by cloning elements
+  const newToggle = browseToggle.cloneNode(true);
+  browseToggle.parentNode.replaceChild(newToggle, browseToggle);
+  const newInput = searchInput.cloneNode(true);
+  searchInput.parentNode.replaceChild(newInput, searchInput);
+
+  newToggle.addEventListener('change', () => {
+    updateBrowseToggleLabels(newToggle.checked);
+    const cardName = document.getElementById('station-card-name').textContent;
+    if (cardName) renderStationCard(cardName);
+  });
+
+  newInput.addEventListener('input', () => {
+    clearTimeout(browseDebounceTimer);
+    browseDebounceTimer = setTimeout(() => {
+      const query = newInput.value.trim().toLowerCase();
+      if (query.length === 0) { closeSuggestions(); return; }
+      const data = getBrowseData();
+      if (!data.length) return;
+      const matches = [...new Set(data.map(r => r.stn_name))]
+        .filter(name => name.toLowerCase().includes(query))
+        .slice(0, 10);
+      renderSuggestions(matches, newInput, suggestions);
+    }, 250);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-wrapper')) closeSuggestions();
+  });
+}
+
+function updateBrowseToggleLabels(isWeekends) {
+  document.getElementById('browse-label-weekdays').classList.toggle('active-label', !isWeekends);
+  document.getElementById('browse-label-weekends').classList.toggle('active-label', isWeekends);
+}
+
+function getBrowseData() {
+  const isWeekends = document.getElementById('browse-day-toggle').checked;
+  return isWeekends ? dataWeekends : dataWeekdays;
+}
+
+function renderSuggestions(matches, input, list) {
+  list.innerHTML = '';
+  if (matches.length === 0) { closeSuggestions(); return; }
+  matches.forEach(name => {
+    const li = document.createElement('li');
+    li.textContent = name;
+    li.addEventListener('click', () => {
+      input.value = name;
+      closeSuggestions();
+      renderStationCard(name);
+    });
+    list.appendChild(li);
+  });
+  list.classList.add('open');
+}
+
+function closeSuggestions() {
+  const list = document.getElementById('search-suggestions');
+  list.classList.remove('open');
+  list.innerHTML = '';
+}
+
+function renderStationCard(stnName) {
+  const data = getBrowseData();
+  const row  = data.find(r => r.stn_name === stnName);
+  if (!row) return;
+
+  const isWeekends = document.getElementById('browse-day-toggle').checked;
+
+  document.getElementById('station-card-name').textContent    = stnName;
+  document.getElementById('station-card-daytype').textContent = isWeekends ? 'Weekends / Public Holidays' : 'Weekdays';
+  document.getElementById('stat-tapin').textContent           = row.total_in.toLocaleString();
+  document.getElementById('stat-tapout').textContent          = row.total_out.toLocaleString();
+  document.getElementById('stat-total').textContent           = row.total_sum.toLocaleString();
+
+  document.getElementById('station-card-band').style.background = buildBandGradient(row);
+
+  const pillsEl = document.getElementById('station-card-lines');
+  pillsEl.innerHTML = '';
+  ALL_LINES.filter(l => row[l] === 1).forEach(l => {
+    const pill = document.createElement('span');
+    pill.className        = 'line-pill';
+    pill.textContent      = LINE_LABELS[l] || l;
+    pill.style.background = LINE_COLORS[l] || '#999';
+    pillsEl.appendChild(pill);
+  });
+
+  document.getElementById('station-card').style.display = 'block';
+}
+
+async function ensureDataLoaded() {
+  if (dataWeekdays.length === 0) {
+    try {
+      dataWeekdays = await loadCSV('./data/summary_weekdays.csv');
+      dataWeekends = await loadCSV('./data/summary_weekends.csv');
+    } catch(e) {
+      alert('Could not load data files.');
+    }
+  }
+}

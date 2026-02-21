@@ -18,7 +18,7 @@
       </div>
       <div class="btn-group">
         <button class="btn-main" onclick="navigateTo('page-minigame', this)">Mini Game</button>
-        <button class="btn-main" onclick="navigateTo('page-browse', this)">Browse by Station</button>
+        <button class="btn-main" onclick="navigateTo('page-browse', this); ensureDataLoaded().then(initBrowse);">Browse by Station</button>
       </div>
       <span class="link-about" onclick="navigateTo('page-about', this)">More Information</span>
     </div>
@@ -35,7 +35,9 @@
       <h2 class="page-title">About</h2>
       <div class="about-content">
         <p>Data source: <a href="https://datamall.lta.gov.sg/content/datamall/en/search_datasets.html?searchText=origin%20destination%20train" target="_blank" rel="noopener">LTA DataMall</a>, Jan 2026 trip data</p>
+        <p>Request for LTA DataMall access <a href="https://datamall.lta.gov.sg/content/datamall/en/request-for-api.html" target="_blank" rel="noopener">here</a></p>
         <p>Web app partially built with Claude Sonnet 4.6</p>
+        <p>This project is not affiliated with the Land Transport Authority nor the Government of Singapore.</p>
       </div>
     </div>
   </div>
@@ -50,7 +52,7 @@
     <div class="page-body game-body">
 
       <h2 class="page-title">Mini Game</h2>
-      <p class="game-subtitle">Think you know the MRT system well?<br>Guess which station is busier than the other, and see how well you can score out of 10!</p>
+      <p class="game-subtitle">Guess which station is busier than the other, and see how well you can score out of 10!</p>
 
       <!-- Day type toggle -->
       <div class="day-toggle-wrapper">
@@ -125,12 +127,59 @@
         <span class="arrow">&#8592;</span> Return to Home
       </button>
     </div>
-    <div class="page-body">
+    <div class="page-body browse-body">
+
       <h2 class="page-title">Browse by Station</h2>
-      <p class="page-placeholder">Coming soon...</p>
+
+      <!-- Day type toggle -->
+      <div class="day-toggle-wrapper">
+        <span class="toggle-label" id="browse-label-weekdays">WEEKDAYS</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="browse-day-toggle" />
+          <span class="toggle-track"></span>
+        </label>
+        <span class="toggle-label" id="browse-label-weekends">WEEKENDS</span>
+      </div>
+
+      <!-- Search bar -->
+      <div class="search-wrapper">
+        <input
+          type="text"
+          id="browse-search"
+          class="browse-search"
+          placeholder="Search station name..."
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <ul class="search-suggestions" id="search-suggestions"></ul>
+      </div>
+
+      <!-- Station detail card -->
+      <div class="station-card" id="station-card" style="display:none;">
+        <div class="station-card-band" id="station-card-band"></div>
+        <div class="station-card-body">
+          <h3 class="station-card-name" id="station-card-name"></h3>
+          <p class="station-card-desc">Daily passenger count for <span id="station-card-daytype"></span></p>
+          <div class="station-card-stats">
+            <div class="stat-item">
+              <span class="stat-label">Tap-ins</span>
+              <span class="stat-value" id="stat-tapin"></span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Tap-outs</span>
+              <span class="stat-value" id="stat-tapout"></span>
+            </div>
+            <div class="stat-item stat-total">
+              <span class="stat-label">Total</span>
+              <span class="stat-value" id="stat-total"></span>
+            </div>
+          </div>
+          <div class="station-card-lines" id="station-card-lines"></div>
+        </div>
+      </div>
+
     </div>
   </div>
-
   <script src="app.js"></script>
 </body>
 </html>

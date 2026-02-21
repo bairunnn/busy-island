@@ -503,3 +503,90 @@ body {
   text-underline-offset: 2px;
 }
 .about-content a:hover { color: #7e5519; }
+
+/* ══════════════════════════════════════
+   BROWSE BY STATION
+══════════════════════════════════════ */
+
+.browse-body {
+  justify-content: flex-start;
+  padding-top: 1.5rem;
+  gap: 1rem;
+  max-width: 480px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.search-wrapper { position: relative; width: 100%; }
+
+.browse-search {
+  font-family: "Google Sans", sans-serif;
+  font-size: 0.95rem;
+  color: var(--color-text);
+  background: #fff;
+  border: 2px solid var(--color-gold);
+  border-radius: var(--radius);
+  padding: 0.65rem 1rem;
+  width: 100%;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+.browse-search:focus { box-shadow: 0 0 0 3px rgba(159,110,32,0.15); }
+.browse-search::placeholder { color: #bbb; }
+
+.search-suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0; right: 0;
+  background: #fff;
+  border: 1.5px solid #e8dcc8;
+  border-radius: var(--radius);
+  list-style: none;
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  display: none;
+}
+.search-suggestions.open { display: block; }
+.search-suggestions li {
+  padding: 0.6rem 1rem;
+  font-size: 0.88rem;
+  cursor: pointer;
+  color: var(--color-text);
+  border-bottom: 1px solid #f5efe3;
+  transition: background 0.12s;
+}
+.search-suggestions li:last-child { border-bottom: none; }
+.search-suggestions li:hover { background: #fff8ec; }
+
+.station-card {
+  width: 100%;
+  border: 1.5px solid #e8dcc8;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #fff;
+}
+.station-card-band { width: 100%; height: 12px; }
+.station-card-body { padding: 1.1rem 1.2rem; display: flex; flex-direction: column; gap: 0.6rem; }
+.station-card-name { font-size: 1.15rem; font-weight: 700; color: var(--color-text); text-transform: capitalize; }
+.station-card-desc { font-size: 0.8rem; color: #888; }
+
+.station-card-stats { display: flex; gap: 0.5rem; width: 100%; }
+.stat-item {
+  flex: 1;
+  background: #fffbf0;
+  border: 1px solid #f0e4cc;
+  border-radius: 8px;
+  padding: 0.6rem 0.5rem;
+  display: flex; flex-direction: column; align-items: center; gap: 0.2rem;
+}
+.stat-item.stat-total { background: #fff8ec; border-color: var(--color-gold); }
+.stat-label { font-size: 0.68rem; font-weight: 600; color: #aaa; letter-spacing: 0.05em; text-transform: uppercase; }
+.stat-value { font-size: 1rem; font-weight: 700; color: var(--color-text); }
+
+.station-card-lines { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.2rem; }
+.line-pill {
+  font-size: 0.7rem; font-weight: 700; color: #fff;
+  padding: 0.2rem 0.6rem; border-radius: 999px; letter-spacing: 0.03em;
+}
