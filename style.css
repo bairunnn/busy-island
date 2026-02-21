@@ -5,7 +5,6 @@
   font-style: normal;
 }
 
-/* ── Google Sans font ── */
 .google-sans {
   font-family: "Google Sans", sans-serif;
   font-optical-sizing: auto;
@@ -20,8 +19,8 @@
   --color-bg:      #fffdf7;
   --color-surface: #fff9ee;
   --font-base:     1rem;
-  --font-title:    2rem;       /* 2× base */
-  --cat-height:    2rem;       /* 2× base font size */
+  --font-title:    2rem;
+  --cat-height:    2rem;
   --radius:        10px;
   --transition:    0.2s ease;
 }
@@ -70,7 +69,7 @@ body {
   font-weight: 700;
   color: var(--color-text);
   letter-spacing: 0.18em;
-  line-height: 0.5;
+  line-height: 0.7;
 }
 
 @font-face {
