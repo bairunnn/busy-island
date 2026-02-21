@@ -525,6 +525,9 @@ print(all_same)</code></pre>
 <pre class="r"><code># If false, some stations have fewer counts than the rest</code></pre>
 <pre class="r"><code># print(pt_code_counts)</code></pre>
 </div>
+<div id="fix-lrt-lines-in-pg-sk" class="section level4">
+<h4>Fix LRT lines in PG SK</h4>
+</div>
 <div id="fix-duplicate-stations-like-stevens" class="section level4">
 <h4>Fix duplicate stations like Stevens</h4>
 <pre class="r"><code>dt10_te11 &lt;- volume_raw %&gt;%
@@ -580,8 +583,8 @@ volume_processed &lt;- volume_processed %&gt;%
     NEL   = if_else(if_any(c(PT_CODE_1, PT_CODE_2, PT_CODE_3), ~ str_detect(.x, &quot;NE&quot;)), 1, 0),
     CCL   = if_else(if_any(c(PT_CODE_1, PT_CODE_2, PT_CODE_3), ~ str_detect(.x, &quot;CC|CE&quot;)), 1, 0),
     DTL   = if_else(if_any(c(PT_CODE_1, PT_CODE_2, PT_CODE_3), ~ str_detect(.x, &quot;DT&quot;)), 1, 0),
-    PGLRT = if_else(if_any(c(PT_CODE_1, PT_CODE_2, PT_CODE_3), ~ str_detect(.x, &quot;PW|PE&quot;)), 1, 0),
-    SKLRT = if_else(if_any(c(PT_CODE_1, PT_CODE_2, PT_CODE_3), ~ str_detect(.x, &quot;SW|SE&quot;)), 1, 0),
+    PGLRT = if_else(if_any(c(PT_CODE_1, PT_CODE_2, PT_CODE_3), ~ str_detect(.x, &quot;PW|PE|PTC&quot;)), 1, 0),
+    SKLRT = if_else(if_any(c(PT_CODE_1, PT_CODE_2, PT_CODE_3), ~ str_detect(.x, &quot;SW|SE|STC&quot;)), 1, 0),
     BPLRT = if_else(if_any(c(PT_CODE_1, PT_CODE_2, PT_CODE_3), ~ str_detect(.x, &quot;BP&quot;)), 1, 0),
     TEL   = if_else(if_any(c(PT_CODE_1, PT_CODE_2, PT_CODE_3), ~ str_detect(.x, &quot;TE&quot;)), 1, 0)
   ) %&gt;%
@@ -606,7 +609,7 @@ volume_processed &lt;- volume_processed %&gt;%
 
 summary_stn_counts</code></pre>
 <pre><code>##   EWL NSL NEL CCL DTL PGLRT SKLRT BPLRT TEL
-## 1  35  27  17  30  35    14    13    13  27</code></pre>
+## 1  35  27  17  30  35    15    14    13  27</code></pre>
 </div>
 <div id="weekday-volumes" class="section level3">
 <h3>Weekday volumes</h3>
