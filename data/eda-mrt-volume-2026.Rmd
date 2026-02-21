@@ -1,0 +1,196 @@
+---
+title: "eda-mrt-volume-2025-07-17"
+author: "bh"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(sf)
+library(ggplot2)
+library(dplyr)
+library(readxl)
+library(tidyr)
+library(stringr)
+library(purrr)
+
+```
+
+## MRT Map
+
+Check for mrt map coverage
+
+```{r mrtt}
+mrt_lines <- st_read("MRTLines_20241113_future.geojson")
+```
+
+```{r mrtt-map}
+ggplot(mrt_lines) +
+  geom_sf(aes(color = colour), size = 1) +
+  scale_color_identity() +  # Use color codes as-is
+  theme_void()
+```
+
+## MRT Stations
+
+Stations
+
+```{r mrt-stations}
+mrt_stations <- st_read("MRTStations_20240914_v1.geojson")
+```
+
+```{r}
+ggplot(mrt_stations) +
+  geom_sf(color = "black", size = 1) +
+  theme_void()
+```
+
+## Cleaning stations file
+
+```{r}
+
+mrt_stations_cleaned <- mrt_stations
+
+names(mrt_stations_cleaned)
+
+mrt_stations_cleaned <- mrt_stations %>%
+  rename(
+    station_codes = ref,
+    line_names = network
+  ) %>%
+  select(station_codes, line_names, name, geometry)
+
+```
+
+### Other LTA datasets
+
+#### MRT station polygons
+
+```{r}
+mrt_list1 <- st_read("./TrainStation_Apr2025/RapidTransitSystemStation.shp")
+```
+
+#### MRT codes
+
+```{r}
+mrt_codes <- read_excel("Train Station Codes and Chinese Names.xls")
+```
+
+```{r}
+mrt_codes_condensed <- mrt_codes %>%
+  select(station_name = mrt_station_english, code = stn_code) %>%
+  group_by(station_name) %>%
+  mutate(code_rank = paste0("code", row_number())) %>%
+  pivot_wider(
+    names_from = code_rank,
+    values_from = code
+  ) %>%
+  ungroup()
+```
+
+```{r}
+mrt_stations_joined <- mrt_stations_cleaned %>%
+  left_join(mrt_codes_condensed, by = c("name" = "station_name")) %>% 
+  select(-c(station_codes, line_names))
+```
+
+```{r}
+ggplot(mrt_stations_joined) +
+  geom_sf(color = "darkblue", size = 1) +
+  theme_void()
+```
+
+### Fix future stations
+
+```{r}
+mrt_stations_joined %>%
+  filter(is.na(code1)) %>%
+  pull(name) %>%
+  print()
+```
+
+### Write MRT stations file
+
+```{r}
+st_write(
+  mrt_stations_joined,
+  "MRT_stations_with_codes_20250717.geojson",
+  driver = "GeoJSON",
+  delete_dsn = TRUE  # overwrite if file exists
+)
+```
+
+# Volumes
+
+```{r}
+volume_raw <- read.csv("transport_node_train_202506.csv", stringsAsFactors = FALSE)
+
+str(volume_raw)
+
+volume_raw <- volume_raw %>%
+  select(-YEAR_MONTH, -PT_TYPE) %>%
+  mutate(TIME_PER_HOUR = as.character(TIME_PER_HOUR))
+```
+
+#### Verify if data is proper
+
+```{r}
+pt_code_counts <- volume_raw %>%
+  count(PT_CODE) %>%
+  arrange(n)
+
+all_same <- n_distinct(pt_code_counts$n) == 1
+print(all_same)
+```
+
+```{r}
+print(pt_code_counts)
+```
+
+### Remove midnight for fair comparison
+
+```{r}
+volume_processed <- volume_raw %>%
+  filter(TIME_PER_HOUR != "0")
+
+pt_code_counts <- volume_processed %>%
+  count(PT_CODE) %>%
+  arrange(n)
+
+all_same <- n_distinct(pt_code_counts$n) == 1
+print(all_same)
+```
+
+### Join station names
+
+```{r}
+
+volume_processed <- volume_processed %>%
+  separate(
+    col = PT_CODE,
+    into = c("PT_CODE_1", "PT_CODE_2", "PT_CODE_3"),
+    sep = "/",
+    fill = "right"  # fill missing values with NA
+  )
+```
+
+```{r}
+volume_processed$stn_name <- NA_character_
+
+# Define lookup function
+get_station_name <- function(code) {
+  match_row <- mrt_stations_joined %>%
+    filter(code1 == code | code2 == code | code3 == code) %>%
+    slice(1)  # take first match only
+  if (nrow(match_row) == 0) {
+    return(NA_character_)
+  } else {
+    return(match_row$name)
+  }
+}
+
+# Apply function row-wise
+volume_processed <- volume_processed %>%
+  mutate(stn_name = map_chr(PT_CODE_1, get_station_name))
+```
