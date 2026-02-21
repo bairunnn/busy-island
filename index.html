@@ -24,6 +24,22 @@
     </div>
   </div>
 
+  <!-- ABOUT PAGE -->
+  <div id="page-about" class="page">
+    <div class="page-header">
+      <button class="btn-back" onclick="navigateTo('page-home', this)">
+        <span class="arrow">&#8592;</span> Return to Home
+      </button>
+    </div>
+    <div class="page-body">
+      <h2 class="page-title">About</h2>
+      <div class="about-content">
+        <p>Data source: <a href="https://datamall.lta.gov.sg/content/datamall/en/search_datasets.html?searchText=origin%20destination%20train" target="_blank" rel="noopener">LTA DataMall</a>, Jan 2026 trip data</p>
+        <p>Web app partially built with Claude Sonnet 4.6</p>
+      </div>
+    </div>
+  </div>
+
   <!-- MINI GAME PAGE -->
   <div id="page-minigame" class="page">
     <div class="page-header">
@@ -31,9 +47,74 @@
         <span class="arrow">&#8592;</span> Return to Home
       </button>
     </div>
-    <div class="page-body">
+    <div class="page-body game-body">
+
       <h2 class="page-title">Mini Game</h2>
-      <p class="page-placeholder">Coming soon...</p>
+      <p class="game-subtitle">Think you know the MRT system well?<br>Guess which station is busier than the other, and see how well you can score out of 10!</p>
+
+      <!-- Day type toggle -->
+      <div class="day-toggle-wrapper">
+        <span class="toggle-label" id="label-weekdays">WEEKDAYS</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="day-toggle" />
+          <span class="toggle-track"></span>
+        </label>
+        <span class="toggle-label" id="label-weekends">WEEKENDS</span>
+      </div>
+
+      <!-- Line dropdown -->
+      <select class="line-select" id="line-select">
+        <option value="MRT">All MRT lines</option>
+        <option value="LRT">All LRT lines</option>
+        <option value="EWL">East-West Line</option>
+        <option value="NSL">North-South Line</option>
+        <option value="NEL">North East Line</option>
+        <option value="CCL">Circle Line</option>
+        <option value="DTL">Downtown Line</option>
+        <option value="TEL">Thomson-East Coast Line</option>
+        <option value="PGLRT">Punggol LRT</option>
+        <option value="SKLRT">Sengkang LRT</option>
+        <option value="BPLRT">Bukit Panjang LRT</option>
+      </select>
+
+      <!-- Action buttons -->
+      <div class="game-actions">
+        <button class="btn-game btn-start" id="btn-start" onclick="startGame()">START GAME</button>
+        <button class="btn-game btn-reset" id="btn-reset" onclick="resetGame()">RESET</button>
+      </div>
+
+      <!-- Scoreboard -->
+      <div class="scoreboard" id="scoreboard" style="display:none;">
+        <div class="score-item correct">CORRECT: <span id="score-correct">0</span></div>
+        <div class="score-item wrong">WRONG: <span id="score-wrong">0</span></div>
+      </div>
+
+      <!-- Question area -->
+      <div class="question-area" id="question-area" style="display:none;">
+        <p class="question-label" id="question-label">Question 1</p>
+        <p class="question-prompt">Which station has more passengers throughout the day?</p>
+
+        <div class="station-row">
+          <!-- Left station -->
+          <button class="station-btn" id="btn-left" onclick="selectAnswer(0)">
+            <div class="line-band" id="band-left"></div>
+            <span class="station-name" id="name-left"></span>
+          </button>
+
+          <!-- Right station -->
+          <button class="station-btn" id="btn-right" onclick="selectAnswer(1)">
+            <div class="line-band" id="band-right"></div>
+            <span class="station-name" id="name-right"></span>
+          </button>
+        </div>
+
+        <!-- Result feedback -->
+        <div class="result-feedback" id="result-feedback" style="display:none;"></div>
+
+        <!-- Next button -->
+        <button class="btn-game btn-next" id="btn-next" style="display:none;" onclick="nextQuestion()">Next Question</button>
+      </div>
+
     </div>
   </div>
 
@@ -46,19 +127,6 @@
     </div>
     <div class="page-body">
       <h2 class="page-title">Browse by Station</h2>
-      <p class="page-placeholder">Coming soon...</p>
-    </div>
-  </div>
-
-  <!-- ABOUT PAGE -->
-  <div id="page-about" class="page">
-    <div class="page-header">
-      <button class="btn-back" onclick="navigateTo('page-home', this)">
-        <span class="arrow">&#8592;</span> Return to Home
-      </button>
-    </div>
-    <div class="page-body">
-      <h2 class="page-title">About</h2>
       <p class="page-placeholder">Coming soon...</p>
     </div>
   </div>
