@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Busy Island</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- HOME PAGE -->
+  <div id="page-home" class="page active">
+    <div class="home-content">
+      <h1 class="title-brand">Busy Island</h1>
+      <p class="subtitle">MRT usage statistics summarised</p>
+      <div class="cat-wrapper">
+        <img src="./media/cats/cute cat doodles cat color 31.png" alt="Cute cat doodle" class="cat-img" />
+      </div>
+      <div class="btn-group">
+        <button class="btn-main" onclick="navigateTo('page-minigame', this)">Mini Game</button>
+        <button class="btn-main" onclick="navigateTo('page-browse', this)">Browse by Station</button>
+      </div>
+      <span class="link-about" onclick="navigateTo('page-about', this)">More Information</span>
+    </div>
+  </div>
+
+  <!-- MINI GAME PAGE -->
+  <div id="page-minigame" class="page">
+    <div class="page-header">
+      <button class="btn-back" onclick="navigateTo('page-home', this)">
+        <span class="arrow">&#8592;</span> Return to Home
+      </button>
+    </div>
+    <div class="page-body">
+      <h2 class="page-title">Mini Game</h2>
+      <p class="page-placeholder">Coming soon...</p>
+    </div>
+  </div>
+
+  <!-- BROWSE BY STATION PAGE -->
+  <div id="page-browse" class="page">
+    <div class="page-header">
+      <button class="btn-back" onclick="navigateTo('page-home', this)">
+        <span class="arrow">&#8592;</span> Return to Home
+      </button>
+    </div>
+    <div class="page-body">
+      <h2 class="page-title">Browse by Station</h2>
+      <p class="page-placeholder">Coming soon...</p>
+    </div>
+  </div>
+
+  <!-- ABOUT PAGE -->
+  <div id="page-about" class="page">
+    <div class="page-header">
+      <button class="btn-back" onclick="navigateTo('page-home', this)">
+        <span class="arrow">&#8592;</span> Return to Home
+      </button>
+    </div>
+    <div class="page-body">
+      <h2 class="page-title">About</h2>
+      <p class="page-placeholder">Coming soon...</p>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
