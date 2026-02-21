@@ -123,8 +123,14 @@ st_write(
 
 # Volumes
 
+Data source:
+
+<https://datamall2.mytransport.sg/ltaodataservice/PV/Train>
+
+postman.co
+
 ```{r}
-volume_raw <- read.csv("transport_node_train_202506.csv", stringsAsFactors = FALSE)
+volume_raw <- read.csv("transport_node_train_202601.csv", stringsAsFactors = FALSE)
 
 str(volume_raw)
 
@@ -133,7 +139,17 @@ volume_raw <- volume_raw %>%
   mutate(TIME_PER_HOUR = as.character(TIME_PER_HOUR))
 ```
 
-#### Verify if data is proper
+### Reformat certain variables
+
+```{r}
+volume_raw <- volume_raw %>%
+  mutate(TIME_PER_HOUR = str_pad(TIME_PER_HOUR, width = 2, side = "left", pad = "0"))
+
+```
+
+### Verify if data is proper
+
+#### Verify \# of observations per station
 
 ```{r}
 pt_code_counts <- volume_raw %>%
@@ -142,30 +158,36 @@ pt_code_counts <- volume_raw %>%
 
 all_same <- n_distinct(pt_code_counts$n) == 1
 print(all_same)
+# If false, some stations have fewer counts than the rest
+
 ```
 
 ```{r}
-print(pt_code_counts)
+# print(pt_code_counts)
 ```
 
-### Remove midnight for fair comparison
+#### Fix duplicate stations like Stevens
 
 ```{r}
-volume_processed <- volume_raw %>%
-  filter(TIME_PER_HOUR != "0")
+dt10_te11 <- volume_raw %>%
+  filter(PT_CODE %in% c("DT10", "TE11")) %>%
+  group_by(DAY_TYPE, TIME_PER_HOUR) %>%
+  summarise(
+    PT_CODE              = "DT10/TE11",
+    TOTAL_TAP_IN_VOLUME  = sum(TOTAL_TAP_IN_VOLUME, na.rm = TRUE),
+    TOTAL_TAP_OUT_VOLUME = sum(TOTAL_TAP_OUT_VOLUME, na.rm = TRUE),
+    .groups = "drop"
+  )
 
-pt_code_counts <- volume_processed %>%
-  count(PT_CODE) %>%
-  arrange(n)
-
-all_same <- n_distinct(pt_code_counts$n) == 1
-print(all_same)
+volume_raw <- volume_raw %>%
+  filter(!PT_CODE %in% c("DT10", "TE11")) %>%
+  bind_rows(dt10_te11)
 ```
 
 ### Join station names
 
 ```{r}
-
+volume_processed <- volume_raw
 volume_processed <- volume_processed %>%
   separate(
     col = PT_CODE,
@@ -193,4 +215,126 @@ get_station_name <- function(code) {
 # Apply function row-wise
 volume_processed <- volume_processed %>%
   mutate(stn_name = map_chr(PT_CODE_1, get_station_name))
+
+```
+
+### Mutate lines
+
+c(EWL, NSL, NEL, CCL, DTL, PGLRT, SKLRT, BPLRT, TEL)
+
+```{r}
+volume_processed <- volume_processed %>%
+  mutate(
+    EWL   = if_else(if_any(c(PT_CODE_1, PT_CODE_2, PT_CODE_3), ~ str_detect(.x, "EW|CG")), 1, 0),
+    NSL   = if_else(if_any(c(PT_CODE_1, PT_CODE_2, PT_CODE_3), ~ str_detect(.x, "NS")), 1, 0),
+    NEL   = if_else(if_any(c(PT_CODE_1, PT_CODE_2, PT_CODE_3), ~ str_detect(.x, "NE")), 1, 0),
+    CCL   = if_else(if_any(c(PT_CODE_1, PT_CODE_2, PT_CODE_3), ~ str_detect(.x, "CC|CE")), 1, 0),
+    DTL   = if_else(if_any(c(PT_CODE_1, PT_CODE_2, PT_CODE_3), ~ str_detect(.x, "DT")), 1, 0),
+    PGLRT = if_else(if_any(c(PT_CODE_1, PT_CODE_2, PT_CODE_3), ~ str_detect(.x, "PW|PE")), 1, 0),
+    SKLRT = if_else(if_any(c(PT_CODE_1, PT_CODE_2, PT_CODE_3), ~ str_detect(.x, "SW|SE")), 1, 0),
+    BPLRT = if_else(if_any(c(PT_CODE_1, PT_CODE_2, PT_CODE_3), ~ str_detect(.x, "BP")), 1, 0),
+    TEL   = if_else(if_any(c(PT_CODE_1, PT_CODE_2, PT_CODE_3), ~ str_detect(.x, "TE")), 1, 0)
+  ) %>%
+  mutate(
+    across(
+      c(EWL, NSL, NEL, CCL, DTL, PGLRT, SKLRT, BPLRT, TEL),
+      ~ replace_na(.x, 0)
+    )
+  )
+```
+
+### Check number of stations (overall & per line)
+
+```{r}
+n_distinct(volume_processed$stn_name)
+
+```
+
+```{r}
+summary_stn_counts <- volume_processed %>%
+  summarise(
+    across(
+      c(EWL, NSL, NEL, CCL, DTL, PGLRT, SKLRT, BPLRT, TEL),
+      ~ n_distinct(stn_name[.x == 1])
+    )
+  )
+
+summary_stn_counts
+```
+
+### Weekday volumes
+
+```{r}
+volume_weekdays <- volume_processed %>%
+  filter(DAY_TYPE == "WEEKDAY") %>%
+  select(-DAY_TYPE)
+
+summary_weekdays <- volume_weekdays %>%
+  group_by(stn_name, EWL, NSL, NEL, CCL, DTL, PGLRT, SKLRT, BPLRT, TEL) %>%
+  summarise(
+    total_in  = sum(TOTAL_TAP_IN_VOLUME, na.rm = TRUE),
+    total_out = sum(TOTAL_TAP_OUT_VOLUME, na.rm = TRUE),
+    total_sum = total_in + total_out,
+    .groups = "drop"
+  )
+
+n_distinct(summary_weekdays$stn_name)
+
+write.csv(summary_weekdays, "summary_weekdays.csv")
+```
+
+#### AM peak - 09 10
+
+```{r}
+volume_weekdays_am_peak <- volume_weekdays %>%
+  filter(TIME_PER_HOUR %in% c("08", "09"))
+
+summary_weekdays_am_peak <- volume_weekdays_am_peak %>%
+  group_by(stn_name, EWL, NSL, NEL, CCL, DTL, PGLRT, SKLRT, BPLRT, TEL) %>%
+  summarise(
+    total_in  = sum(TOTAL_TAP_IN_VOLUME, na.rm = TRUE),
+    total_out = sum(TOTAL_TAP_OUT_VOLUME, na.rm = TRUE),
+    total_sum = total_in + total_out,
+    .groups = "drop"
+  )
+n_distinct(summary_weekdays_am_peak$stn_name)
+write.csv(summary_weekdays_am_peak, "summary_weekdays_am_peak.csv")
+
+```
+
+#### PM peak - 17 18 19
+
+```{r}
+volume_weekdays_pm_peak <- volume_weekdays %>%
+  filter(TIME_PER_HOUR %in% c("17", "18", "19"))
+
+summary_weekdays_pm_peak <- volume_weekdays_pm_peak %>%
+  group_by(stn_name, EWL, NSL, NEL, CCL, DTL, PGLRT, SKLRT, BPLRT, TEL) %>%
+  summarise(
+    total_in  = sum(TOTAL_TAP_IN_VOLUME, na.rm = TRUE),
+    total_out = sum(TOTAL_TAP_OUT_VOLUME, na.rm = TRUE),
+    total_sum = total_in + total_out,
+    .groups = "drop"
+  )
+n_distinct(summary_weekdays_pm_peak$stn_name)
+write.csv(summary_weekdays_pm_peak, "summary_weekdays_pm_peak.csv")
+```
+
+### Weekend volumes
+
+```{r}
+volume_weekends <- volume_processed %>%
+  filter(DAY_TYPE == "WEEKENDS/HOLIDAY") %>%
+  select(-DAY_TYPE)
+
+summary_weekends <- volume_weekends %>%
+  group_by(stn_name, EWL, NSL, NEL, CCL, DTL, PGLRT, SKLRT, BPLRT, TEL) %>%
+  summarise(
+    total_in  = sum(TOTAL_TAP_IN_VOLUME, na.rm = TRUE),
+    total_out = sum(TOTAL_TAP_OUT_VOLUME, na.rm = TRUE),
+    total_sum = total_in + total_out,
+    .groups = "drop"
+  )
+n_distinct(summary_weekends$stn_name)
+write.csv(summary_weekends, "summary_weekends.csv")
 ```
