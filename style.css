@@ -95,7 +95,7 @@ body {
   width: auto;
   object-fit: contain;
   display: block;
-  transition: transform 0.15s ease;
+  transition: transform 0.2s ease;
 }
 
 /* ── Buttons ── */

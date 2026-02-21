@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
       cat.style.transform = 'translateX(0)';
       setTimeout(() => { dodging = false; }, 150);
-    }, 3000);
+    }, 1500);
   });
 
   // Day toggle label highlighting + auto-reset
