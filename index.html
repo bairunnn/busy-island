@@ -19,6 +19,7 @@
       <div class="btn-group">
         <button class="btn-main" onclick="navigateTo('page-minigame', this)">Mini Game</button>
         <button class="btn-main" onclick="navigateTo('page-browse', this); ensureDataLoaded().then(initBrowse);">Browse by Station</button>
+        <button class="btn-main" onclick="navigateTo('page-browse-line', this); ensureDataLoaded().then(initBrowseLine);">Browse by Line</button>
       </div>
       <span class="link-about" onclick="navigateTo('page-about', this)">More Information</span>
     </div>
@@ -176,12 +177,63 @@
             </div>
           </div>
           <div class="station-card-lines" id="station-card-lines"></div>
-          <div class="station-card-ranks" id="station-card-ranks"></div>
         </div>
       </div>
 
     </div>
   </div>
+  <!-- BROWSE BY LINE PAGE -->
+  <div id="page-browse-line" class="page">
+    <div class="page-header">
+      <button class="btn-back" onclick="navigateTo('page-home', this)">
+        <span class="arrow">&#8592;</span> Return to Home
+      </button>
+    </div>
+    <div class="page-body browse-body">
+
+      <h2 class="page-title">Browse by Line</h2>
+
+      <!-- Day type toggle -->
+      <div class="day-toggle-wrapper">
+        <span class="toggle-label" id="bline-label-weekdays">WEEKDAYS</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="bline-day-toggle" />
+          <span class="toggle-track"></span>
+        </label>
+        <span class="toggle-label" id="bline-label-weekends">WEEKENDS</span>
+      </div>
+
+      <!-- Search bar -->
+      <div class="search-wrapper">
+        <input
+          type="text"
+          id="bline-search"
+          class="browse-search"
+          placeholder="Search line name..."
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <ul class="search-suggestions" id="bline-suggestions"></ul>
+      </div>
+
+      <!-- Line table -->
+      <div class="line-table-wrap" id="line-table-wrap" style="display:none;">
+        <div class="line-table-header" id="line-table-header"></div>
+        <table class="line-table" id="line-table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Station</th>
+              <th>Total Daily Count</th>
+            </tr>
+          </thead>
+          <tbody id="line-table-body"></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>

@@ -589,27 +589,83 @@ body {
   font-size: 0.7rem; font-weight: 700; color: #fff;
   padding: 0.2rem 0.6rem; border-radius: 999px; letter-spacing: 0.03em;
 }
-/* ── Station ranks ── */
-.station-card-ranks {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  margin-top: 0.1rem;
+/* ══════════════════════════════════════
+   BROWSE BY LINE
+══════════════════════════════════════ */
+
+.line-table-wrap {
+  width: 100%;
 }
 
-.rank-row {
-  font-size: 0.78rem;
-  color: #666;
+.line-table-header {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--color-text);
 }
 
-.rank-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+.line-table-header-band {
+  height: 14px;
+  border-radius: 3px;
   flex-shrink: 0;
+  width: 28px;
 }
 
-.rank-number { font-weight: 700; color: var(--color-text); }
+.line-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.83rem;
+  text-align: left;
+}
+
+.line-table thead tr {
+  border-bottom: 2px solid var(--color-gold);
+}
+
+.line-table th {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #aaa;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.4rem 0.5rem 0.5rem;
+}
+
+.line-table th:first-child { width: 48px; text-align: center; }
+.line-table th:last-child  { text-align: right; }
+
+.line-table tbody tr {
+  border-bottom: 1px solid #f0e8d8;
+  transition: background 0.1s;
+}
+.line-table tbody tr:last-child { border-bottom: none; }
+.line-table tbody tr:hover { background: #fff8ec; }
+
+.line-table td {
+  padding: 0.5rem 0.5rem;
+  color: var(--color-text);
+  vertical-align: middle;
+}
+
+.line-table td:first-child {
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: #aaa;
+  width: 48px;
+}
+
+.line-table td:first-child.rank-top {
+  color: var(--color-gold);
+  font-size: 0.88rem;
+}
+
+.line-table td:last-child {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: #444;
+}
