@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Set defaults on first load
   document.getElementById('line-select').value = 'MRT';
   document.getElementById('day-toggle').checked = false;
+
   updateToggleLabels(false);
 
   const lineSelect = document.getElementById('line-select');
@@ -56,8 +57,12 @@ document.addEventListener('DOMContentLoaded', () => {
     lineSelect.addEventListener('change', resetGame);
   }
 
+  updateBrowseToggleLabels(false);
   updateFixedStationUI();
 
+  ensureDataLoaded().catch(() => {
+    // fail silently here; explicit actions already show alerts
+  });
 });
 
 function updateToggleLabels(isWeekends) {
@@ -212,14 +217,21 @@ function generateQuestions(pool, fixedStation = null) {
 
 /* ── START GAME ── */
 async function startGame() {
-  if (dataWeekdays.length === 0) {
-    try {
-      dataWeekdays = await loadCSV('./data/summary_weekdays.csv');
-      dataWeekends = await loadCSV('./data/summary_weekends.csv');
-    } catch(e) {
-      alert('Could not load data files. Please ensure summary_weekdays.csv and summary_weekends.csv are in the ./data/ folder.');
-      return;
-    }
+  // if (dataWeekdays.length === 0) {
+  //   try {
+  //     dataWeekdays = await loadCSV('./data/summary_weekdays.csv');
+  //     dataWeekends = await loadCSV('./data/summary_weekends.csv');
+  //   } catch(e) {
+  //     alert('Could not load data files. Please ensure summary_weekdays.csv and summary_weekends.csv are in the ./data/ folder.');
+  //     return;
+  //   }
+  // }
+
+  try {
+    await ensureDataLoaded();
+  } catch (e) {
+    alert('Could not load data files. Please ensure summary_weekdays.csv and summary_weekends.csv are in the ./data/ folder.');
+    return;
   }
 
   const isWeekends = document.getElementById('day-toggle').checked;
@@ -421,7 +433,14 @@ function bindCustomiseModal() {
   const lineSelect = document.getElementById('line-select');
   const dayToggle = document.getElementById('day-toggle');
 
-  searchInput.addEventListener('input', () => {
+  searchInput.addEventListener('input', async () => {
+    try {
+      await ensureDataLoaded();
+    } catch (e) {
+      renderFixedStationSuggestions([]);
+      return;
+    }
+
     const query = searchInput.value.trim().toLowerCase();
 
     if (!query) {
@@ -461,8 +480,15 @@ function bindCustomiseModal() {
   });
 }
 
-function openCustomiseModal() {
+async function openCustomiseModal() {
   bindCustomiseModal();
+
+  try {
+    await ensureDataLoaded();
+  } catch (e) {
+    alert('Could not load station data for customisation.');
+    return;
+  }
 
   const modal = document.getElementById('customise-modal');
   const input = document.getElementById('fixed-station-search');
