@@ -589,3 +589,27 @@ body {
   font-size: 0.7rem; font-weight: 700; color: #fff;
   padding: 0.2rem 0.6rem; border-radius: 999px; letter-spacing: 0.03em;
 }
+/* ── Station ranks ── */
+.station-card-ranks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-top: 0.1rem;
+}
+
+.rank-row {
+  font-size: 0.78rem;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.rank-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.rank-number { font-weight: 700; color: var(--color-text); }

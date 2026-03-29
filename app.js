@@ -411,6 +411,32 @@ function renderStationCard(stnName) {
   });
 
   document.getElementById('station-card').style.display = 'block';
+
+  // ── Line ranks ──
+  const ranksEl = document.getElementById('station-card-ranks');
+  ranksEl.innerHTML = '';
+  const activeLines = ALL_LINES.filter(l => row[l] === 1);
+  activeLines.forEach(l => {
+    // All stations on this line, sorted descending by total_sum
+    const lineStations = data
+      .filter(r => r[l] === 1)
+      .sort((a, b) => b.total_sum - a.total_sum);
+    const rank  = lineStations.findIndex(r => r.stn_name === stnName) + 1;
+    const total = lineStations.length;
+
+    const rankRow = document.createElement('div');
+    rankRow.className = 'rank-row';
+
+    const dot = document.createElement('span');
+    dot.className  = 'rank-dot';
+    dot.style.background = LINE_COLORS[l] || '#999';
+
+    rankRow.innerHTML = `
+      <span class="rank-dot" style="background:${LINE_COLORS[l] || '#999'}"></span>
+      Rank <span class="rank-number">${rank}</span> out of <span class="rank-number">${total}</span> for the ${LINE_LABELS[l] || l}
+    `;
+    ranksEl.appendChild(rankRow);
+  });
 }
 
 async function ensureDataLoaded() {
