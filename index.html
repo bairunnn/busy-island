@@ -20,6 +20,7 @@
         <button class="btn-main" onclick="navigateTo('page-minigame', this)">Mini Game</button>
         <button class="btn-main" onclick="navigateTo('page-browse', this); ensureDataLoaded().then(initBrowse);">Browse by Station</button>
         <button class="btn-main" onclick="navigateTo('page-browse-line', this); ensureDataLoaded().then(initBrowseLine);">Browse by Line</button>
+        <button class="btn-main btn-multiplayer" onclick="navigateTo('page-multiplayer', this); initMultiplayer();">Multiplayer</button>
       </div>
       <span class="link-about" onclick="navigateTo('page-about', this)">More Information</span>
     </div>
@@ -279,6 +280,217 @@
     </div>
   </div>
 
+  <!-- MULTIPLAYER PAGE -->
+  <div id="page-multiplayer" class="page">
+    <div class="page-header">
+      <button class="btn-back" onclick="navigateTo('page-home', this); mpLeaveRoom();">
+        <span class="arrow">&#8592;</span> Return to Home
+      </button>
+    </div>
+    <div class="page-body mp-body" id="mp-body">
+
+      <!-- ── LOBBY (choose create/join) ── -->
+      <div id="mp-lobby" class="mp-section">
+        <h2 class="page-title">Multiplayer</h2>
+        <p class="game-subtitle">Play with friends — see who knows Singapore's MRT best!</p>
+        <div class="mp-lobby-btns">
+          <button class="mp-big-btn mp-create-btn" onclick="mpShowCreate()">
+            <!-- <span class="mp-big-btn-icon">＋</span> -->
+            <span class="mp-big-btn-label">Create Room</span>
+            <span class="mp-big-btn-sub">Host a new game for your friends</span>
+          </button>
+          <button class="mp-big-btn mp-join-btn" onclick="mpShowJoin()">
+            <!-- <span class="mp-big-btn-icon">→</span> -->
+            <span class="mp-big-btn-label">Join Room</span>
+            <span class="mp-big-btn-sub">Enter a room code to join</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── CREATE ROOM ── -->
+      <div id="mp-create" class="mp-section" style="display:none;">
+        <h2 class="page-title">Create Room</h2>
+
+        <div class="mp-form">
+          <label class="mp-form-label">Your Name</label>
+          <input type="text" id="mp-create-username" class="browse-search" placeholder="Enter your name..." maxlength="20" autocomplete="off" spellcheck="false" />
+
+          <label class="mp-form-label">Line Filter</label>
+          <select class="line-select" id="mp-line-select">
+            <option value="MRT">All MRT lines</option>
+            <option value="LRT">All LRT lines</option>
+            <option value="EWL">East-West Line</option>
+            <option value="NSL">North-South Line</option>
+            <option value="NEL">North East Line</option>
+            <option value="CCL">Circle Line</option>
+            <option value="DTL">Downtown Line</option>
+            <option value="TEL">Thomson-East Coast Line</option>
+            <option value="PGLRT">Punggol LRT</option>
+            <option value="SKLRT">Sengkang LRT</option>
+            <option value="BPLRT">Bukit Panjang LRT</option>
+          </select>
+
+          <label class="mp-form-label">Day Type</label>
+          <div class="day-toggle-wrapper">
+            <span class="toggle-label" id="mp-label-weekdays">WEEKDAYS</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="mp-day-toggle" />
+              <span class="toggle-track"></span>
+            </label>
+            <span class="toggle-label" id="mp-label-weekends">WEEKENDS</span>
+          </div>
+        </div>
+
+        <div class="mp-form-actions">
+          <button class="btn-game btn-reset" onclick="mpShowLobby()">Back</button>
+          <button class="btn-game btn-start" onclick="mpCreateRoom()">Create Room</button>
+        </div>
+      </div>
+
+      <!-- ── JOIN ROOM ── -->
+      <div id="mp-join" class="mp-section" style="display:none;">
+        <h2 class="page-title">Join Room</h2>
+
+        <div class="mp-form">
+          <label class="mp-form-label">Your Name</label>
+          <input type="text" id="mp-join-username" class="browse-search" placeholder="Enter your name..." maxlength="20" autocomplete="off" spellcheck="false" />
+
+          <label class="mp-form-label">Room Code</label>
+          <input type="text" id="mp-join-code" class="browse-search mp-code-input" placeholder="5-digit code..." maxlength="5" autocomplete="off" spellcheck="false" inputmode="numeric" />
+        </div>
+
+        <div class="mp-form-error" id="mp-join-error" style="display:none;"></div>
+
+        <div class="mp-form-actions">
+          <button class="btn-game btn-reset" onclick="mpShowLobby()">Back</button>
+          <button class="btn-game btn-start" id="mp-join-btn" onclick="mpJoinRoom()">Join Room</button>
+        </div>
+      </div>
+
+      <!-- ── WAITING ROOM ── -->
+      <div id="mp-waiting" class="mp-section" style="display:none;">
+        <h2 class="page-title" id="mp-waiting-title">Waiting Room</h2>
+
+        <div class="mp-room-code-box">
+          <span class="mp-room-code-label">Room Code</span>
+          <span class="mp-room-code-value" id="mp-room-code-display">—</span>
+          <button class="mp-copy-btn" onclick="mpCopyCode()" title="Copy code">
+            <span id="mp-copy-icon">⎘</span>
+          </button>
+        </div>
+
+        <div class="mp-settings-summary" id="mp-settings-summary"></div>
+
+        <div class="mp-players-box">
+          <div class="mp-players-header">Players</div>
+          <ul class="mp-players-list" id="mp-players-list"></ul>
+        </div>
+
+        <div id="mp-host-controls" style="display:none;">
+          <button class="btn-game btn-start mp-start-btn" onclick="mpHostStartGame()" id="mp-start-game-btn">Start Game</button>
+        </div>
+        <div id="mp-guest-waiting-msg" class="mp-guest-msg" style="display:none;">
+          Waiting for host to start the game…
+        </div>
+      </div>
+
+      <!-- ── IN-GAME ── -->
+      <div id="mp-ingame" class="mp-section mp-ingame-section" style="display:none;">
+        <div class="mp-progress-row">
+          <span class="mp-q-counter" id="mp-q-counter">Q 1 / 10</span>
+          <div class="mp-score-mini">
+            <span class="mp-score-correct" id="mp-score-correct">0</span>
+            <span class="mp-score-sep">/</span>
+            <span class="mp-score-wrong" id="mp-score-wrong">0</span>
+          </div>
+        </div>
+
+        <p class="question-prompt">Which station has more passengers throughout the day?</p>
+
+        <div class="station-row">
+          <button class="station-btn" id="mp-btn-left" onclick="mpSelectAnswer(0)">
+            <div class="line-band" id="mp-band-left"></div>
+            <span class="station-name" id="mp-name-left"></span>
+          </button>
+          <button class="station-btn" id="mp-btn-right" onclick="mpSelectAnswer(1)">
+            <div class="line-band" id="mp-band-right"></div>
+            <span class="station-name" id="mp-name-right"></span>
+          </button>
+        </div>
+
+        <button class="btn-game btn-next" id="mp-btn-next" style="display:none;" onclick="mpNextQuestion()">Next Question</button>
+        <div class="result-feedback" id="mp-result-feedback" style="display:none;"></div>
+      </div>
+
+      <!-- ── WAITING FOR OTHERS ── -->
+      <div id="mp-waiting-results" class="mp-section" style="display:none;">
+        <h2 class="page-title">Waiting for others…</h2>
+        <p class="game-subtitle">You finished! Hang tight while the others complete their questions.</p>
+        <div class="mp-waiting-results-score">
+          Your score: <span id="mp-your-final-score"></span>
+        </div>
+        <div class="mp-players-box">
+          <div class="mp-players-header">Progress</div>
+          <ul class="mp-players-list" id="mp-progress-list"></ul>
+        </div>
+      </div>
+
+      <!-- ── FINAL LEADERBOARD ── -->
+      <div id="mp-leaderboard" class="mp-section" style="display:none;">
+        <h2 class="page-title">Final Results</h2>
+        <div class="mp-lb-table-wrap">
+          <table class="mp-lb-table" id="mp-lb-table">
+            <thead>
+              <tr><th>#</th><th>Player</th><th>Score</th></tr>
+            </thead>
+            <tbody id="mp-lb-body"></tbody>
+          </table>
+        </div>
+        <button class="btn-game btn-start mp-start-btn" onclick="mpPlayAgain()">Play Again</button>
+        <button class="btn-game btn-reset mp-start-btn" onclick="mpLeaveAndHome()">Leave Room</button>
+      </div>
+
+    </div>
+  </div>
+
   <script src="app.js"></script>
+
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
+    import {
+      getDatabase, ref, set, get, onValue, update, remove, push, off
+    } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA7zvDVYglc59De5Wsu211_Yya6yE4WMaI",
+      authDomain: "busy-island.firebaseapp.com",
+      projectId: "busy-island",
+      databaseURL: "https://busy-island-default-rtdb.asia-southeast1.firebasedatabase.app",
+      storageBucket: "busy-island.firebasestorage.app",
+      messagingSenderId: "555583487661",
+      appId: "1:555583487661:web:0770fc65bfb1810e51d024",
+      measurementId: "G-ZZQ6JBXBV4"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getDatabase(app);
+
+    // Expose to global scope for app.js multiplayer functions
+    window._mpDB = db;
+    window._mpRef = ref;
+    window._mpSet = set;
+    window._mpGet = get;
+    window._mpOnValue = onValue;
+    window._mpUpdate = update;
+    window._mpRemove = remove;
+    window._mpOff = off;
+
+    // Signal that Firebase is ready
+    window._mpFirebaseReady = true;
+    document.dispatchEvent(new Event('firebase-ready'));
+  </script>
 </body>
 </html>

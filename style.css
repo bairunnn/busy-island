@@ -841,3 +841,373 @@ body {
   color: var(--color-text);
   flex: 1;
 }
+
+/* ══════════════════════════════════════
+   MULTIPLAYER
+══════════════════════════════════════ */
+
+.btn-multiplayer {
+  background: linear-gradient(135deg, #fff8ec 0%, #fef3dc 100%);
+  border: 2px solid var(--color-gold);
+  position: relative;
+  overflow: hidden;
+}
+.btn-multiplayer::after {
+  content: "EXPERIMENTAL";
+  position: absolute;
+  top: 5px; right: 8px;
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--color-gold);
+  opacity: 0.7;
+}
+
+.mp-body {
+  justify-content: flex-start;
+  padding-top: 1.5rem;
+  gap: 1.2rem;
+  max-width: 480px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.mp-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.1rem;
+}
+
+/* Lobby big buttons */
+.mp-lobby-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  width: 100%;
+}
+
+.mp-big-btn {
+  font-family: "Google Sans", sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  width: 100%;
+  padding: 1.1rem 1.3rem;
+  border-radius: var(--radius);
+  border: 2px solid var(--color-gold);
+  cursor: pointer;
+  transition: background var(--transition), transform 0.15s;
+  text-align: left;
+}
+.mp-big-btn:active { transform: scale(0.98); }
+
+.mp-create-btn { background: var(--color-gold); }
+.mp-join-btn   { background: #fff8ec; }
+
+.mp-big-btn-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+  color: #fff;
+}
+.mp-join-btn .mp-big-btn-icon { color: var(--color-gold); }
+
+.mp-big-btn-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+}
+.mp-join-btn .mp-big-btn-label { color: var(--color-text); }
+
+.mp-big-btn-sub {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.75);
+  font-weight: 400;
+}
+.mp-join-btn .mp-big-btn-sub { color: #888; }
+
+/* Form */
+.mp-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 100%;
+}
+.mp-form-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #888;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-align: left;
+  margin-top: 0.4rem;
+}
+.mp-form-actions {
+  display: flex;
+  gap: 0.6rem;
+  width: 100%;
+  margin-top: 0.4rem;
+}
+.mp-form-actions .btn-game { flex: 1; }
+
+.mp-code-input {
+  font-size: 1.5rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.25em;
+  text-align: center;
+}
+
+.mp-form-error {
+  width: 100%;
+  background: #fdecea;
+  border: 1.5px solid #f5c6c0;
+  border-radius: var(--radius);
+  padding: 0.6rem 0.9rem;
+  font-size: 0.82rem;
+  color: #c62828;
+  text-align: center;
+}
+
+/* Room code box */
+.mp-room-code-box {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #fff8ec;
+  border: 2px solid var(--color-gold);
+  border-radius: var(--radius);
+  padding: 0.9rem 1.2rem;
+  width: 100%;
+  justify-content: center;
+}
+.mp-room-code-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #b08540;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.mp-room-code-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--color-gold);
+  letter-spacing: 0.2em;
+  font-variant-numeric: tabular-nums;
+}
+.mp-copy-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--color-gold);
+  font-size: 1.3rem;
+  line-height: 1;
+  padding: 0.2rem;
+  opacity: 0.7;
+  transition: opacity var(--transition);
+}
+.mp-copy-btn:hover { opacity: 1; }
+
+/* Settings summary */
+.mp-settings-summary {
+  font-size: 0.8rem;
+  color: #888;
+  text-align: center;
+}
+
+/* Players box */
+.mp-players-box {
+  width: 100%;
+  background: #fff;
+  border: 1.5px solid #e8dcc8;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.mp-players-header {
+  background: var(--color-surface);
+  border-bottom: 1px solid #e8dcc8;
+  padding: 0.55rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #aaa;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.mp-players-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.mp-players-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid #f5efe3;
+  font-size: 0.9rem;
+  color: var(--color-text);
+  font-weight: 500;
+}
+.mp-players-list li:last-child { border-bottom: none; }
+.mp-player-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--color-gold);
+  flex-shrink: 0;
+}
+.mp-player-host-tag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--color-gold);
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+  letter-spacing: 0.04em;
+  margin-left: auto;
+}
+.mp-player-you-tag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--color-gold);
+  border: 1.5px solid var(--color-gold);
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+  letter-spacing: 0.04em;
+  margin-left: auto;
+}
+
+/* Start btn */
+.mp-start-btn {
+  width: 100%;
+  flex: unset;
+  margin-top: 0.2rem;
+}
+
+/* Guest waiting msg */
+.mp-guest-msg {
+  font-size: 0.85rem;
+  color: #888;
+  text-align: center;
+  font-style: italic;
+}
+
+/* In-game */
+.mp-ingame-section {
+  gap: 0.85rem;
+}
+
+.mp-progress-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+.mp-q-counter {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #888;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.mp-score-mini {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.mp-score-correct { color: #2e7d32; }
+.mp-score-wrong   { color: #c62828; }
+.mp-score-sep     { color: #ccc; }
+
+/* Live leaderboard */
+.mp-live-board {
+  width: 100%;
+  background: #fff;
+  border: 1.5px solid #e8dcc8;
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+.mp-live-board-title {
+  background: var(--color-surface);
+  border-bottom: 1px solid #e8dcc8;
+  padding: 0.45rem 1rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #aaa;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.mp-live-list {
+  list-style: none;
+  padding: 0; margin: 0;
+}
+.mp-live-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid #f5efe3;
+  font-size: 0.85rem;
+}
+.mp-live-list li:last-child { border-bottom: none; }
+.mp-live-rank {
+  font-weight: 700;
+  color: #ccc;
+  width: 1.2rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+.mp-live-rank.top { color: var(--color-gold); }
+.mp-live-name { flex: 1; color: var(--color-text); font-weight: 500; }
+.mp-live-name.you { color: var(--color-gold); font-weight: 700; }
+.mp-live-score { font-variant-numeric: tabular-nums; color: #444; font-weight: 700; }
+
+/* Final leaderboard */
+.mp-lb-table-wrap { width: 100%; }
+.mp-lb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.mp-lb-table thead tr { border-bottom: 2px solid var(--color-gold); }
+.mp-lb-table th {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #aaa;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.4rem 0.5rem 0.5rem;
+  text-align: left;
+}
+.mp-lb-table th:first-child { width: 2rem; text-align: center; }
+.mp-lb-table th:last-child  { text-align: right; }
+.mp-lb-table tbody tr { border-bottom: 1px solid #f0e8d8; transition: background 0.1s; }
+.mp-lb-table tbody tr:last-child { border-bottom: none; }
+.mp-lb-table tbody tr.mp-lb-you { background: #fff8ec; }
+.mp-lb-table td { padding: 0.6rem 0.5rem; color: var(--color-text); vertical-align: middle; }
+.mp-lb-table td:first-child { text-align: center; font-weight: 700; color: #aaa; }
+.mp-lb-table td:first-child.lb-top { color: var(--color-gold); }
+.mp-lb-table td:last-child { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+.mp-lb-medal { font-size: 1.1rem; }
+
+/* ── Waiting for results ── */
+.mp-waiting-results-score {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  background: #fff8ec;
+  border: 2px solid var(--color-gold);
+  border-radius: var(--radius);
+  padding: 0.8rem 1.4rem;
+  text-align: center;
+  width: 100%;
+}
+.mp-waiting-results-score span {
+  color: var(--color-gold);
+  font-size: 1.3rem;
+  font-weight: 800;
+}
