@@ -427,56 +427,36 @@ async function ensureDataLoaded() {
    BROWSE BY LINE
 ══════════════════════════════════════ */
 
-// Full list of searchable line names mapped to their key
-const LINE_SEARCH_MAP = [
-  { label: 'East-West Line',          key: 'EWL'   },
-  { label: 'North-South Line',        key: 'NSL'   },
-  { label: 'North East Line',         key: 'NEL'   },
-  { label: 'Circle Line',             key: 'CCL'   },
-  { label: 'Downtown Line',           key: 'DTL'   },
-  { label: 'Thomson-East Coast Line', key: 'TEL'   },
-  { label: 'Punggol LRT',             key: 'PGLRT' },
-  { label: 'Sengkang LRT',            key: 'SKLRT' },
-  { label: 'Bukit Panjang LRT',       key: 'BPLRT' },
-];
-
-let blineDebounceTimer = null;
+let lineTableAscending = false; // default: descending (rank 1 first)
 
 function initBrowseLine() {
-  const toggle      = document.getElementById('bline-day-toggle');
-  const searchInput = document.getElementById('bline-search');
-  const suggestions = document.getElementById('bline-suggestions');
+  const toggle   = document.getElementById('bline-day-toggle');
+  const selectEl = document.getElementById('bline-select');
 
-  toggle.checked = false;
+  // Reset on each visit
+  toggle.checked  = false;
+  selectEl.value  = '';
+  lineTableAscending = false;
   updateBlineToggleLabels(false);
+  document.getElementById('line-table-wrap').style.display = 'none';
 
   // Clone to remove stale listeners
   const newToggle = toggle.cloneNode(true);
   toggle.parentNode.replaceChild(newToggle, toggle);
-  const newInput = searchInput.cloneNode(true);
-  searchInput.parentNode.replaceChild(newInput, searchInput);
+  const newSelect = selectEl.cloneNode(true);
+  selectEl.parentNode.replaceChild(newSelect, selectEl);
 
   newToggle.addEventListener('change', () => {
     updateBlineToggleLabels(newToggle.checked);
-    // Re-render table if a line is already selected
-    const activeKey = document.getElementById('line-table-wrap').dataset.lineKey;
-    if (activeKey) renderLineTable(activeKey);
+    const key = document.getElementById('bline-select').value;
+    if (key) renderLineTable(key);
   });
 
-  newInput.addEventListener('input', () => {
-    clearTimeout(blineDebounceTimer);
-    blineDebounceTimer = setTimeout(() => {
-      const query = newInput.value.trim().toLowerCase();
-      if (query.length === 0) { closeBlineSuggestions(); return; }
-      const matches = LINE_SEARCH_MAP.filter(l =>
-        l.label.toLowerCase().includes(query)
-      );
-      renderBlineSuggestions(matches, newInput, suggestions);
-    }, 250);
-  });
-
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('.search-wrapper')) closeBlineSuggestions();
+  newSelect.addEventListener('change', () => {
+    const key = newSelect.value;
+    lineTableAscending = false;
+    if (key) renderLineTable(key);
+    else document.getElementById('line-table-wrap').style.display = 'none';
   });
 }
 
@@ -485,58 +465,45 @@ function updateBlineToggleLabels(isWeekends) {
   document.getElementById('bline-label-weekends').classList.toggle('active-label', isWeekends);
 }
 
-function getBlineData() {
-  const isWeekends = document.getElementById('bline-day-toggle').checked;
-  return isWeekends ? dataWeekends : dataWeekdays;
-}
-
-function renderBlineSuggestions(matches, input, list) {
-  list.innerHTML = '';
-  if (matches.length === 0) { closeBlineSuggestions(); return; }
-  matches.forEach(({ label, key }) => {
-    const li = document.createElement('li');
-    // Coloured dot + label
-    li.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${LINE_COLORS[key]||'#999'};margin-right:0.5rem;vertical-align:middle;"></span>${label}`;
-    li.addEventListener('click', () => {
-      input.value = label;
-      closeBlineSuggestions();
-      renderLineTable(key);
-    });
-    list.appendChild(li);
-  });
-  list.classList.add('open');
-}
-
-function closeBlineSuggestions() {
-  const list = document.getElementById('bline-suggestions');
-  list.classList.remove('open');
-  list.innerHTML = '';
-}
-
 function renderLineTable(lineKey) {
-  const data = getBlineData();
   const isWeekends = document.getElementById('bline-day-toggle').checked;
+  const data       = isWeekends ? dataWeekends : dataWeekdays;
   const lineLabel  = LINE_LABELS[lineKey] || lineKey;
   const color      = LINE_COLORS[lineKey] || '#999';
 
-  // Filter + sort descending
+  // Sort descending by total_sum (canonical ranking order)
   const stations = data
     .filter(r => r[lineKey] === 1)
     .sort((a, b) => b.total_sum - a.total_sum);
 
-  // Header with colour band swatch + line name + day type
+  // Header: colour band swatch + line name only
   const headerEl = document.getElementById('line-table-header');
+  // Preserve the btn-flip, update only the label content
+  const flipBtn = document.getElementById('btn-flip');
   headerEl.innerHTML = `
+  <div class="line-table-header-left">
     <span class="line-table-header-band" style="background:${color};"></span>
-    ${lineLabel}
-    <span style="font-weight:400;color:#888;margin-left:0.25rem;">— ${isWeekends ? 'Weekends / Public Holidays' : 'Weekdays'}</span>
-  `;
+    <span class="line-table-header-label">${lineLabel}</span>
+  </div>`;
+  headerEl.appendChild(flipBtn);
 
-  // Table body
+  // Render rows respecting current flip state
+  renderLineRows(stations);
+
+  const wrap = document.getElementById('line-table-wrap');
+  wrap.dataset.lineKey = lineKey;
+  wrap.style.display   = 'flex';
+}
+
+function renderLineRows(stations) {
   const tbody = document.getElementById('line-table-body');
   tbody.innerHTML = '';
-  stations.forEach((row, i) => {
-    const rank = i + 1;
+
+  const ordered = lineTableAscending ? [...stations].reverse() : stations;
+
+  ordered.forEach((row, i) => {
+    // Rank is always relative to descending order
+    const rank = lineTableAscending ? stations.length - i : i + 1;
     const tr   = document.createElement('tr');
     tr.innerHTML = `
       <td class="${rank <= 3 ? 'rank-top' : ''}">${rank}</td>
@@ -545,9 +512,18 @@ function renderLineTable(lineKey) {
     `;
     tbody.appendChild(tr);
   });
+}
 
-  // Store active key for re-render on toggle
-  const wrap = document.getElementById('line-table-wrap');
-  wrap.dataset.lineKey = lineKey;
-  wrap.style.display   = 'block';
+function flipLineTable() {
+  lineTableAscending = !lineTableAscending;
+  const key = document.getElementById('line-table-wrap').dataset.lineKey;
+  if (!key) return;
+
+  const isWeekends = document.getElementById('bline-day-toggle').checked;
+  const data       = isWeekends ? dataWeekends : dataWeekdays;
+  const stations   = data
+    .filter(r => r[key] === 1)
+    .sort((a, b) => b.total_sum - a.total_sum);
+
+  renderLineRows(stations);
 }

@@ -298,6 +298,8 @@ body {
 /* ── Line dropdown ── */
 .line-select {
   font-family: "Google Sans", sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "GRAD" 0;
   font-size: 0.9rem;
   color: var(--color-text);
   background: #fff;
@@ -595,16 +597,22 @@ body {
 
 .line-table-wrap {
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .line-table-header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.6rem;
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--color-text);
+  justify-content: space-between;
+}
+
+/* Left group */
+.line-table-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .line-table-header-band {
@@ -613,6 +621,22 @@ body {
   flex-shrink: 0;
   width: 28px;
 }
+
+.btn-flip {
+  font-family: "Google Sans", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-gold);
+  background: transparent;
+  border: 1.5px solid var(--color-gold);
+  border-radius: var(--radius);
+  padding: 0.3rem 0.75rem;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: background var(--transition), color var(--transition);
+  letter-spacing: 0.02em;
+}
+.btn-flip:hover { background: var(--color-gold); color: #fff; }
 
 .line-table {
   width: 100%;
@@ -668,4 +692,12 @@ body {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   color: #444;
+}
+
+.line-table-header-label {
+  font-family: "Google Sans", sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--color-text);
+  flex: 1;
 }

@@ -203,22 +203,25 @@
         <span class="toggle-label" id="bline-label-weekends">WEEKENDS</span>
       </div>
 
-      <!-- Search bar -->
-      <div class="search-wrapper">
-        <input
-          type="text"
-          id="bline-search"
-          class="browse-search"
-          placeholder="Search line name..."
-          autocomplete="off"
-          spellcheck="false"
-        />
-        <ul class="search-suggestions" id="bline-suggestions"></ul>
-      </div>
+      <!-- Line dropdown sorted by opening date -->
+      <select class="line-select" id="bline-select">
+        <option value="">Select a line...</option>
+        <option value="NSL">North-South Line</option>
+        <option value="EWL">East-West Line</option>
+        <option value="BPLRT">Bukit Panjang LRT</option>
+        <option value="NEL">North East Line</option>
+        <option value="SKLRT">Sengkang LRT</option>
+        <option value="PGLRT">Punggol LRT</option>
+        <option value="CCL">Circle Line</option>
+        <option value="DTL">Downtown Line</option>
+        <option value="TEL">Thomson-East Coast Line</option>
+      </select>
 
       <!-- Line table -->
       <div class="line-table-wrap" id="line-table-wrap" style="display:none;">
-        <div class="line-table-header" id="line-table-header"></div>
+        <div class="line-table-header" id="line-table-header">
+          <button class="btn-flip" id="btn-flip" onclick="flipLineTable()">&#8597; Flip Order</button>
+        </div>
         <table class="line-table" id="line-table">
           <thead>
             <tr>
