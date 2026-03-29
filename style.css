@@ -846,13 +846,13 @@ body {
    MULTIPLAYER
 ══════════════════════════════════════ */
 
-.btn-multiplayer {
+/* .btn-multiplayer {
   background: linear-gradient(135deg, #fff8ec 0%, #fef3dc 100%);
   border: 2px solid var(--color-gold);
   position: relative;
   overflow: hidden;
-}
-.btn-multiplayer::after {
+} */
+/* .btn-multiplayer::after {
   content: "EXPERIMENTAL";
   position: absolute;
   top: 5px; right: 8px;
@@ -861,7 +861,7 @@ body {
   letter-spacing: 0.08em;
   color: var(--color-gold);
   opacity: 0.7;
-}
+} */
 
 .mp-body {
   justify-content: flex-start;

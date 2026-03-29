@@ -20,7 +20,8 @@
         <button class="btn-main" onclick="navigateTo('page-minigame', this)">Mini Game</button>
         <button class="btn-main" onclick="navigateTo('page-browse', this); ensureDataLoaded().then(initBrowse);">Browse by Station</button>
         <button class="btn-main" onclick="navigateTo('page-browse-line', this); ensureDataLoaded().then(initBrowseLine);">Browse by Line</button>
-        <button class="btn-main btn-multiplayer" onclick="navigateTo('page-multiplayer', this); initMultiplayer();">Multiplayer</button>
+        <!-- <button class="btn-main btn-multiplayer" onclick="navigateTo('page-multiplayer', this); initMultiplayer();">Multiplayer</button> -->
+        <button class="btn-main" onclick="navigateTo('page-multiplayer', this); initMultiplayer();">Multiplayer</button>
       </div>
       <span class="link-about" onclick="navigateTo('page-about', this)">More Information</span>
     </div>
@@ -464,15 +465,15 @@
     } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyA7zvDVYglc59De5Wsu211_Yya6yE4WMaI",
-      authDomain: "busy-island.firebaseapp.com",
-      projectId: "busy-island",
-      databaseURL: "https://busy-island-default-rtdb.asia-southeast1.firebasedatabase.app",
-      storageBucket: "busy-island.firebasestorage.app",
-      messagingSenderId: "555583487661",
-      appId: "1:555583487661:web:0770fc65bfb1810e51d024",
-      measurementId: "G-ZZQ6JBXBV4"
+      apiKey: "AIzaSyCzTMpL8l4AUAGjhQNgOkHrNs46QDjzWp0",
+      authDomain: "busy-island-v2.firebaseapp.com",
+      databaseURL: "https://busy-island-v2-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "busy-island-v2",
+      storageBucket: "busy-island-v2.firebasestorage.app",
+      messagingSenderId: "1063368514810",
+      appId: "1:1063368514810:web:6bec80db18b2b0d91abd43"
     };
+
 
     const app = initializeApp(firebaseConfig);
     const analytics = getAnalytics(app);
