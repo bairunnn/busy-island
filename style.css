@@ -358,6 +358,109 @@ body {
 }
 .btn-next:hover { background: var(--color-gold); color: #fff; }
 
+.btn-customise {
+  background: #fff8ec;
+  color: var(--color-gold);
+  border: 2px solid #ead7b6;
+}
+.btn-customise:hover { background: #f4ead6; }
+
+.fixed-station-indicator {
+  width: 100%;
+  background: #fff8ec;
+  border: 1.5px solid #ead7b6;
+  border-radius: var(--radius);
+  padding: 0.7rem 0.9rem;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: #6e5325;
+  text-align: center;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(34, 34, 34, 0.42);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  z-index: 1000;
+}
+.modal-overlay.open { display: flex; }
+
+.modal-card {
+  width: min(100%, 420px);
+  background: #fffdf7;
+  border-radius: 16px;
+  border: 1.5px solid #e8dcc8;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.16);
+  overflow: hidden;
+}
+
+.modal-header,
+.modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.1rem;
+}
+
+.modal-header {
+  border-bottom: 1px solid #f0e4cc;
+  background: var(--color-surface);
+}
+
+.modal-title {
+  font-family: "Google Sans", sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.modal-close {
+  font-family: "Google Sans", sans-serif;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: #8a6a30;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.modal-body {
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.modal-label {
+  font-family: "Google Sans", sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-text);
+  text-align: left;
+}
+
+.modal-search-wrapper { width: 100%; }
+
+.fixed-station-current {
+  font-size: 0.82rem;
+  color: #666;
+  text-align: left;
+  min-height: 1.2rem;
+}
+
+.modal-actions {
+  border-top: 1px solid #f0e4cc;
+}
+
+.modal-actions .btn-game {
+  flex: 1;
+}
+
 /* ── Scoreboard ── */
 .scoreboard {
   display: flex;

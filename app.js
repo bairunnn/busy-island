@@ -56,6 +56,8 @@ document.addEventListener('DOMContentLoaded', () => {
     lineSelect.addEventListener('change', resetGame);
   }
 
+  updateFixedStationUI();
+
 });
 
 function updateToggleLabels(isWeekends) {
@@ -91,6 +93,9 @@ let currentQ     = 0;
 let scoreCorrect = 0;
 let scoreWrong   = 0;
 let answered     = false;
+
+let fixedStationName = '';
+let fixedStationModalBound = false;
 
 /* ── CSV loader ── */
 async function loadCSV(path) {
@@ -149,25 +154,59 @@ function buildBandGradient(row) {
 }
 
 /* ── Generate 10 questions with no repeated stations ── */
-function generateQuestions(pool) {
-  const shuffled = [...pool].sort(() => Math.random() - 0.5);
-  const qs = [];
-  if (shuffled.length >= 20) {
-    for (let i = 0; i < 10; i++) {
-      qs.push([shuffled[i * 2], shuffled[i * 2 + 1]]);
+function generateQuestions(pool, fixedStation = null) {
+  if (!fixedStation) {
+    const qs = [];
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+
+    if (shuffled.length >= 20) {
+      let idx = 0;
+      while (qs.length < 10 && idx + 1 < shuffled.length) {
+        const a = shuffled[idx];
+        const b = shuffled[idx + 1];
+        idx += 2;
+
+        if (a.stn_name === b.stn_name) continue;
+        qs.push([a, b]);
+      }
     }
-  } else {
-    // Pool too small: shuffle and cycle, ensuring left !== right within each pair
-    const extended = [];
-    while (extended.length < 20) extended.push(...shuffled.sort(() => Math.random() - 0.5));
-    let idx = 0;
-    while (qs.length < 10) {
-      const a = extended[idx % extended.length];
-      const b = extended[(idx + 1) % extended.length];
-      if (a.stn_name !== b.stn_name) qs.push([a, b]);
-      idx++;
+
+    if (qs.length < 10) {
+      const extended = [];
+      while (extended.length < 40) {
+        extended.push(...pool.sort(() => Math.random() - 0.5));
+      }
+
+      let idx = 0;
+      while (qs.length < 10 && idx < 200) {
+        const a = extended[idx % extended.length];
+        const b = extended[(idx + 1) % extended.length];
+        idx++;
+
+        if (!a || !b || a.stn_name === b.stn_name) continue;
+        qs.push([a, b]);
+      }
     }
+
+    return qs.slice(0, 10);
   }
+
+  const opponents = pool.filter(r => r.stn_name !== fixedStation.stn_name);
+
+  if (opponents.length === 0) return [];
+
+  const shuffledOpponents = [...opponents].sort(() => Math.random() - 0.5);
+  const qs = [];
+
+  for (let i = 0; i < 10; i++) {
+    const opponent = shuffledOpponents[i % shuffledOpponents.length];
+    qs.push(
+      Math.random() < 0.5
+        ? [fixedStation, opponent]
+        : [opponent, fixedStation]
+    );
+  }
+
   return qs;
 }
 
@@ -193,14 +232,29 @@ async function startGame() {
     return;
   }
 
-  questions    = generateQuestions(gamePool);
+  const fixedStation = fixedStationName
+    ? gamePool.find(r => r.stn_name === fixedStationName)
+    : null;
+
+  if (fixedStationName && !fixedStation) {
+    alert('The fixed station is not available for the current line filter. Please clear it or choose another one.');
+    return;
+  }
+
+  questions = generateQuestions(gamePool, fixedStation);
+
+  if (questions.length < 10) {
+    alert('Not enough stations to generate 10 questions for the current filter. Please choose a broader line selection or clear the fixed station.');
+    return;
+  }
+
   currentQ     = 0;
   scoreCorrect = 0;
   scoreWrong   = 0;
 
-  document.getElementById('score-correct').textContent  = 0;
-  document.getElementById('score-wrong').textContent    = 0;
-  document.getElementById('scoreboard').style.display   = 'flex';
+  document.getElementById('score-correct').textContent   = 0;
+  document.getElementById('score-wrong').textContent     = 0;
+  document.getElementById('scoreboard').style.display    = 'flex';
   document.getElementById('question-area').style.display = 'flex';
 
   renderQuestion();
@@ -299,6 +353,148 @@ function resetGame() {
   document.getElementById('question-area').style.display = 'none';
   document.getElementById('score-correct').textContent   = '0';
   document.getElementById('score-wrong').textContent     = '0';
+}
+
+function getCurrentGameData() {
+  const isWeekends = document.getElementById('day-toggle').checked;
+  return isWeekends ? dataWeekends : dataWeekdays;
+}
+
+function getCurrentGamePool() {
+  const selection = document.getElementById('line-select').value;
+  return filterPool(getCurrentGameData(), selection);
+}
+
+function updateFixedStationUI() {
+  const indicator = document.getElementById('fixed-station-indicator');
+  const currentEl = document.getElementById('fixed-station-current');
+  const hasFixed = !!fixedStationName;
+
+  if (indicator) {
+    indicator.style.display = hasFixed ? 'block' : 'none';
+    indicator.textContent = hasFixed
+      ? `Fixed station: ${fixedStationName}.`
+      : '';
+  }
+
+  if (currentEl) {
+    currentEl.textContent = hasFixed
+      ? `Current fixed station: ${fixedStationName}`
+      : 'No station fixed.';
+  }
+}
+
+function renderFixedStationSuggestions(matches) {
+  const list = document.getElementById('fixed-station-suggestions');
+  list.innerHTML = '';
+
+  if (!matches.length) {
+    list.classList.remove('open');
+    return;
+  }
+
+  matches.forEach(name => {
+    const li = document.createElement('li');
+    li.textContent = name;
+
+    li.addEventListener('click', () => {
+      fixedStationName = name;
+      document.getElementById('fixed-station-search').value = name;
+      list.classList.remove('open');
+      list.innerHTML = '';
+      updateFixedStationUI();
+      resetGame();
+    });
+
+    list.appendChild(li);
+  });
+
+  list.classList.add('open');
+}
+
+function bindCustomiseModal() {
+  if (fixedStationModalBound) return;
+  fixedStationModalBound = true;
+
+  const searchInput = document.getElementById('fixed-station-search');
+  const modal = document.getElementById('customise-modal');
+  const lineSelect = document.getElementById('line-select');
+  const dayToggle = document.getElementById('day-toggle');
+
+  searchInput.addEventListener('input', () => {
+    const query = searchInput.value.trim().toLowerCase();
+
+    if (!query) {
+      renderFixedStationSuggestions([]);
+      return;
+    }
+
+    const matches = [...new Set(getCurrentGamePool().map(r => r.stn_name))]
+      .filter(name => name.toLowerCase().includes(query))
+      .slice(0, 10);
+
+    renderFixedStationSuggestions(matches);
+  });
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeCustomiseModal();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('open')) {
+      closeCustomiseModal();
+    }
+  });
+
+  [lineSelect, dayToggle].forEach(el => {
+    el.addEventListener('change', () => {
+      if (!fixedStationName) return;
+
+      const available = getCurrentGamePool().some(r => r.stn_name === fixedStationName);
+      if (!available) {
+        fixedStationName = '';
+        const input = document.getElementById('fixed-station-search');
+        if (input) input.value = '';
+        updateFixedStationUI();
+      }
+    });
+  });
+}
+
+function openCustomiseModal() {
+  bindCustomiseModal();
+
+  const modal = document.getElementById('customise-modal');
+  const input = document.getElementById('fixed-station-search');
+
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
+
+  input.value = fixedStationName || '';
+  updateFixedStationUI();
+  renderFixedStationSuggestions([]);
+
+  setTimeout(() => input.focus(), 0);
+}
+
+function closeCustomiseModal() {
+  const modal = document.getElementById('customise-modal');
+  const list = document.getElementById('fixed-station-suggestions');
+
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
+  list.classList.remove('open');
+  list.innerHTML = '';
+}
+
+function clearFixedStation() {
+  fixedStationName = '';
+  const input = document.getElementById('fixed-station-search');
+  if (input) input.value = '';
+
+  updateFixedStationUI();
+  renderFixedStationSuggestions([]);
+  resetGame();
 }
 
 /* ══════════════════════════════════════

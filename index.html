@@ -84,7 +84,10 @@
       <div class="game-actions">
         <button class="btn-game btn-start" id="btn-start" onclick="startGame()">START GAME</button>
         <button class="btn-game btn-reset" id="btn-reset" onclick="resetGame()">RESET</button>
+        <button class="btn-game btn-customise" id="btn-customise" onclick="openCustomiseModal()">CUSTOMISE</button>
       </div>
+
+      <div class="fixed-station-indicator" id="fixed-station-indicator" style="display:none;"></div>
 
       <!-- Scoreboard -->
       <div class="scoreboard" id="scoreboard" style="display:none;">
@@ -235,6 +238,44 @@
         </table>
       </div>
 
+    </div>
+  </div>
+
+  <!-- Modal overlay -->
+  <div class="modal-overlay" id="customise-modal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="customise-modal-title">
+      <div class="modal-header">
+        <h3 class="modal-title" id="customise-modal-title">Customise</h3>
+        <button
+          class="modal-close"
+          type="button"
+          aria-label="Close customise dialog"
+          onclick="closeCustomiseModal()"
+        >&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <label class="modal-label" for="fixed-station-search">Fix a station?</label>
+
+        <div class="search-wrapper modal-search-wrapper">
+          <input
+            type="text"
+            id="fixed-station-search"
+            class="browse-search"
+            placeholder="Search station name..."
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <ul class="search-suggestions" id="fixed-station-suggestions"></ul>
+        </div>
+
+        <div class="fixed-station-current" id="fixed-station-current">No station fixed.</div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-game btn-reset" type="button" onclick="clearFixedStation()">Clear Settings</button>
+        <button class="btn-game btn-start" type="button" onclick="closeCustomiseModal()">Done</button>
+      </div>
     </div>
   </div>
 
