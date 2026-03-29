@@ -384,8 +384,8 @@ function updateFixedStationUI() {
 
   if (indicator) {
     indicator.style.display = hasFixed ? 'block' : 'none';
-    indicator.textContent = hasFixed
-      ? `Fixed station: ${fixedStationName}.`
+    indicator.innerHTML = hasFixed
+      ? `Fixed station: <span class="fixed-station-link" onclick="openCustomiseModal()">${fixedStationName}</span>.`
       : '';
   }
 
@@ -521,6 +521,11 @@ function clearFixedStation() {
   updateFixedStationUI();
   renderFixedStationSuggestions([]);
   resetGame();
+}
+
+async function restartGame() {
+  resetGame();
+  await startGame();
 }
 
 /* ══════════════════════════════════════

@@ -377,6 +377,17 @@ body {
   text-align: center;
 }
 
+.fixed-station-link {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.fixed-station-link:hover {
+  opacity: 0.75;
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;
