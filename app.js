@@ -28,12 +28,12 @@ document.addEventListener('DOMContentLoaded', () => {
   cat.addEventListener('click', () => {
     if (dodging) return;
     dodging = true;
-    const direction = Math.random() < 0.5 ? -3 : 3;
+    const direction = Math.random() < 0.5 ? -7 : 7;
     cat.style.transform = `translateX(${direction}%)`;
     setTimeout(() => {
       cat.style.transform = 'translateX(0)';
       setTimeout(() => { dodging = false; }, 150);
-    }, 1500);
+    }, 1000);
   });
 
   // Day toggle label highlighting + auto-reset
