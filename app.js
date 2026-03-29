@@ -787,19 +787,21 @@ function flipLineTable() {
 
 // ── State ──
 let mp = {
-  roomCode:    null,
-  playerId:    null,
-  isHost:      false,
-  username:    '',
-  lineSelect:  'MRT',
-  isWeekends:  false,
-  questions:   [],   // array of {left, right} (station objects) - only host generates
-  currentQ:    0,
-  correct:     0,
-  wrong:       0,
-  answered:    false,
-  listeners:   [],   // {ref, fn} pairs to detach on leave
-  finished:    false,
+  roomCode:      null,
+  playerId:      null,
+  isHost:        false,
+  username:      '',
+  lineSelect:    'MRT',
+  isWeekends:    false,
+  questions:     [],
+  currentQ:      0,
+  correct:       0,
+  wrong:         0,
+  answered:      false,
+  listeners:     [],
+  finished:      false,
+  _nextRoomCode: null,
+  _nextPlayerId: null,
 };
 
 // Generate a random 5-digit room code
@@ -871,14 +873,8 @@ async function mpLeaveRoom() {
   if (!mp.roomCode) return;
 
   try {
-    const db = window._mpDB;
-    if (mp.isHost) {
-      // Remove entire room if host leaves
-      await window._mpRemove(mpDbRef(`rooms/${mp.roomCode}`));
-    } else {
-      // Remove just this player
-      await window._mpRemove(mpDbRef(`rooms/${mp.roomCode}/players/${mp.playerId}`));
-    }
+    // Any player leaving destroys the room — this kicks everyone via the listener
+    await window._mpRemove(mpDbRef(`rooms/${mp.roomCode}`));
   } catch(e) {}
 
   mp.roomCode  = null;
@@ -1039,11 +1035,17 @@ function mpCopyCode() {
 function mpListenRoom() {
   mpListen(`rooms/${mp.roomCode}`, (snap) => {
     if (!snap.exists()) {
-      // Room was deleted (host left)
+      // Room deleted — someone left, send everyone home
       mpDetachAll();
-      alert('The host has closed the room.');
-      mpLeaveRoom();
-      navigateTo('page-home', null);
+      const oldCode = mp.roomCode;
+      mp.roomCode = null; mp.playerId = null; mp.isHost = false; mp.questions = [];
+      // Only show alert if we're still on the multiplayer page and not already navigating away
+      const mpPage = document.getElementById('page-multiplayer');
+      if (mpPage && mpPage.classList.contains('active')) {
+        alert('A player left the room. Returning to home.');
+        navigateTo('page-home', null);
+        mpShowLobby();
+      }
       return;
     }
 
@@ -1053,7 +1055,6 @@ function mpListenRoom() {
     // Update player list in waiting room
     mpRenderPlayers(players);
 
-    // Update progress panel if we're on the waiting-for-results screen
     const currentSection = [...document.querySelectorAll('.mp-section')]
       .find(el => el.style.display === 'flex');
 
@@ -1067,7 +1068,12 @@ function mpListenRoom() {
 
     if (room.status === 'finished') {
       if (currentSection && currentSection.id !== 'mp-leaderboard') {
-        mpShowFinalLeaderboard(players);
+        mpShowFinalLeaderboard(players, room.nextRoomCode || null);
+      }
+      // If next room is ready and we're already on leaderboard, update the button
+      if (room.nextRoomCode) {
+        const btn = document.getElementById('mp-play-again-btn');
+        if (btn) { btn.disabled = false; btn.textContent = 'Play Again'; }
       }
     }
   });
@@ -1271,8 +1277,8 @@ function mpRenderProgressList(players) {
 }
 
 // ── Show final leaderboard ──
-function mpShowFinalLeaderboard(players) {
-  mpDetachAll();
+// Does NOT detach listeners — we keep watching for nextRoomCode to appear
+async function mpShowFinalLeaderboard(players, existingNextCode) {
   mpShowSection('mp-leaderboard');
 
   const sorted = Object.entries(players)
@@ -1281,7 +1287,6 @@ function mpShowFinalLeaderboard(players) {
 
   const tbody = document.getElementById('mp-lb-body');
   tbody.innerHTML = '';
-
   const medals = ['🥇', '🥈', '🥉'];
 
   sorted.forEach((p, i) => {
@@ -1297,39 +1302,88 @@ function mpShowFinalLeaderboard(players) {
     `;
     tbody.appendChild(tr);
   });
+
+  // Disable Play Again until next room is ready
+  const btn = document.getElementById('mp-play-again-btn');
+  if (btn) {
+    if (existingNextCode) {
+      btn.disabled = false;
+      btn.textContent = 'Play Again';
+    } else {
+      btn.disabled = true;
+      btn.textContent = 'Setting up next room…';
+    }
+  }
+
+  // Host creates the next room and writes its code back
+  if (mp.isHost && !existingNextCode) {
+    const nextCode     = mpGenCode();
+    const nextPlayerId = mpGenPlayerId();
+
+    const nextRoomData = {
+      code:       nextCode,
+      host:       nextPlayerId,
+      status:     'waiting',
+      lineSelect: mp.lineSelect,
+      isWeekends: mp.isWeekends,
+      questions:  null,
+      players: {
+        [nextPlayerId]: { name: mp.username, isHost: true, correct: 0, wrong: 0, finished: false }
+      }
+    };
+
+    await window._mpSet(mpDbRef(`rooms/${nextCode}`), nextRoomData);
+    // Write nextRoomCode into the finished room so guests can read it
+    await window._mpUpdate(mpDbRef(`rooms/${mp.roomCode}`), { nextRoomCode: nextCode });
+
+    // Store for own use
+    mp._nextRoomCode     = nextCode;
+    mp._nextPlayerId     = nextPlayerId;
+
+    if (btn) { btn.disabled = false; btn.textContent = 'Play Again'; }
+  } else if (existingNextCode) {
+    mp._nextRoomCode = existingNextCode;
+  }
 }
 
-// ── Play again (host only — resets room back to waiting) ──
+// ── Play again — everyone joins the pre-created next room ──
 async function mpPlayAgain() {
-  if (!mp.roomCode) return;
+  const nextCode = mp._nextRoomCode;
+  if (!nextCode) return;
 
-  const snap = await window._mpGet(mpDbRef(`rooms/${mp.roomCode}`));
-  if (!snap.exists()) { mpLeaveAndHome(); return; }
+  const oldCode = mp.roomCode;
+  mpDetachAll();
 
   if (mp.isHost) {
-    // Reset scores, keep players
-    const playerSnap = await window._mpGet(mpDbRef(`rooms/${mp.roomCode}/players`));
-    const players = playerSnap.val() || {};
-    const resetPlayers = {};
-    Object.keys(players).forEach(id => {
-      resetPlayers[id] = { ...players[id], correct: 0, wrong: 0, finished: false };
-    });
-
-    await window._mpUpdate(mpDbRef(`rooms/${mp.roomCode}`), {
-      status: 'waiting',
-      questions: null,
-      players: resetPlayers
-    });
-
-    mp.correct = 0; mp.wrong = 0; mp.currentQ = 0; mp.finished = false;
+    // Host already created the room and is already in it as _nextPlayerId
+    mp.roomCode  = nextCode;
+    mp.playerId  = mp._nextPlayerId;
+    mp.correct   = 0; mp.wrong = 0; mp.currentQ = 0; mp.finished = false;
+    mp._nextRoomCode = null; mp._nextPlayerId = null;
     mpShowWaiting(true);
     mpListenRoom();
   } else {
-    // Guest: reset own score and go back to waiting
-    await window._mpUpdate(mpDbRef(`rooms/${mp.roomCode}/players/${mp.playerId}`), {
-      correct: 0, wrong: 0, finished: false
+    // Guest: join the next room
+    const snap = await window._mpGet(mpDbRef(`rooms/${nextCode}`));
+    if (!snap.exists()) {
+      alert('Next room not found. Returning to home.');
+      navigateTo('page-home', null);
+      mpShowLobby();
+      return;
+    }
+    const roomData = snap.val();
+    const newPlayerId = mpGenPlayerId();
+
+    await window._mpUpdate(mpDbRef(`rooms/${nextCode}/players/${newPlayerId}`), {
+      name: mp.username, isHost: false, correct: 0, wrong: 0, finished: false
     });
-    mp.correct = 0; mp.wrong = 0; mp.currentQ = 0; mp.finished = false;
+
+    mp.roomCode  = nextCode;
+    mp.playerId  = newPlayerId;
+    mp.lineSelect = roomData.lineSelect;
+    mp.isWeekends = roomData.isWeekends;
+    mp.correct   = 0; mp.wrong = 0; mp.currentQ = 0; mp.finished = false;
+    mp._nextRoomCode = null;
     mpShowWaiting(false);
     mpListenRoom();
   }
@@ -1338,6 +1392,8 @@ async function mpPlayAgain() {
 // ── Leave room and go home ──
 async function mpLeaveAndHome() {
   await mpLeaveRoom();
+  mp._nextRoomCode = null;
+  mp._nextPlayerId = null;
   navigateTo('page-home', null);
   mpShowLobby();
 }
