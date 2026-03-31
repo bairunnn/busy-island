@@ -1211,3 +1211,39 @@ body {
   font-size: 1.3rem;
   font-weight: 800;
 }
+
+
+.mp-player-name-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.mp-rematch-fire {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.mp-choice-status {
+  width: 100%;
+  background: #fff8ec;
+  border: 1.5px solid #ead7b6;
+  border-radius: var(--radius);
+  padding: 0.7rem 0.9rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #6e5325;
+  text-align: center;
+}
+
+.mp-leaderboard-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.mp-leaderboard-actions .btn-game[disabled] {
+  opacity: 0.55;
+  cursor: default;
+}

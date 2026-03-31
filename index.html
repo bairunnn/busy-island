@@ -44,7 +44,7 @@
       <div class="about-content">
         <p>Data source: <a href="https://datamall.lta.gov.sg/content/datamall/en/search_datasets.html?searchText=origin%20destination%20train" target="_blank" rel="noopener">LTA DataMall</a>, Jan 2026 trip data</p>
         <p>Request for LTA DataMall access <a href="https://datamall.lta.gov.sg/content/datamall/en/request-for-api.html" target="_blank" rel="noopener">here</a></p>
-        <p>Web app partially built with Claude Sonnet 4.6</p>
+        <p>Web app partially built with Claude Sonnet 4.6 & ChatGPT 5.4</p>
         <p>This project is not affiliated with the Land Transport Authority nor the Government of Singapore.</p>
         <p>The best MRT game.</p>
       </div>
@@ -298,7 +298,7 @@
 
       <!-- ── LOBBY (choose create/join) ── -->
       <div id="mp-lobby" class="mp-section">
-        <h2 class="page-title">Multiplayer</h2>
+        <h2 class="page-title">Multiplayer (in-person)</h2>
         <p class="game-subtitle">Play with friends — see who knows Singapore's MRT best!</p>
         <div class="mp-lobby-btns">
           <button class="mp-big-btn mp-create-btn" onclick="mpShowCreate()">
@@ -453,8 +453,12 @@
             <tbody id="mp-lb-body"></tbody>
           </table>
         </div>
-        <button class="btn-game btn-start mp-start-btn" id="mp-play-again-btn" onclick="mpPlayAgain()">Play Again</button>
-        <button class="btn-game btn-reset mp-start-btn" onclick="mpLeaveAndHome()">Leave Room</button>
+        <div class="mp-choice-status" id="mp-choice-status" style="display:none;"></div>
+        <div class="mp-leaderboard-actions" id="mp-leaderboard-actions">
+          <button class="btn-game btn-start mp-start-btn" id="mp-rematch-btn" onclick="mpChooseAnotherRound()">I WANT ANOTHER ROUND</button>
+          <button class="btn-game btn-reset mp-start-btn" id="mp-leave-room-btn" onclick="mpLeaveAndHome()">LEAVE ROOM</button>
+          <button class="btn-game btn-start mp-start-btn" id="mp-enter-new-lobby-btn" onclick="mpEnterNewLobby()" style="display:none;">ENTER NEW LOBBY</button>
+        </div>
       </div>
 
     </div>
